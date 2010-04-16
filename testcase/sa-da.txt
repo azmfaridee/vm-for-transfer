@@ -1,5 +1,12 @@
 Jag såg en stor bok.
 I saw a large book.
-^Jag<prn><subj><p1><un><sg>/Jeg<prn><subj><p1><un><sg>$ ^se<vblex><past><actv>/se<vblex><past><actv>$ ^en<det><ind><ut><sg>/en<det><ind><ut><sg>$ ^stor<adj><pst><ut><sg><ind>/stor<adj><pst><ut><sg><ind>$ ^bok<n><ut><sg><ind><nom>/bog<n><ut><sg><ind><nom>$
+^Jag<prn><subj><p1><un><sg>/Jeg<prn><subj><p1><un><sg>$ ^se<vblex><past><actv>/se<vblex><past><actv>$ ^en<det><ind><ut><sg>/en<det><ind><ut><sg>$ ^stor<adj><pst><ut><sg><ind>/stor<adj><pst><ut><sg><ind>$ ^bok<n><ut><sg><ind><nom>/bog<n><ut><sg><ind><nom>$^.<sent>/.<sent>$
 
+Jag vill gå en tur.
+I want to go for a tour.
+^Jag<prn><subj><p1><un><sg>/Jeg<prn><subj><p1><un><sg>$ ^vilja<vaux><pres><actv>/ville<vaux><pres><actv>$ ^gå<vblex><inf><actv>/gå<vblex><inf><actv>$ ^en<det><ind><ut><sg>/en<det><ind><ut><sg>$ ^tur<n><ut><sg><ind><nom>/tur<n><ut><sg><ind><nom>$^.<sent>/.<sent>$
+
+Man får inte röka här.
+You must not smoke here.
+^Man<prn><subj><p3><un><sg>/Man<prn><subj><p3><un><sg>$ ^få<vblex><pres><actv>/få<vblex><pres><actv>$ ^inte<adv>/ikke<adv>$ ^röka<vblex><inf><actv>/ryge<vblex><inf><actv>$ ^här<adv>/her<adv>$^.<sent>/.<sent>$
 
