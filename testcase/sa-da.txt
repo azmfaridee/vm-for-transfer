@@ -1,0 +1,5 @@
+Jag såg en stor bok.
+I saw a large book.
+^Jag<prn><subj><p1><un><sg>/Jeg<prn><subj><p1><un><sg>$ ^se<vblex><past><actv>/se<vblex><past><actv>$ ^en<det><ind><ut><sg>/en<det><ind><ut><sg>$ ^stor<adj><pst><ut><sg><ind>/stor<adj><pst><ut><sg><ind>$ ^bok<n><ut><sg><ind><nom>/bog<n><ut><sg><ind><nom>$
+
+
