@@ -1,6 +1,8 @@
 # Originally written by James Tauber http://jtauber.com/ 
 # Modified by Abu Zaher Md. Faridee
 
+from pprint import pprint
+
 class Trie:
     """
     A Trie is like a dictionary in that it maps keys to values. However,
@@ -51,7 +53,7 @@ class Trie:
             except KeyError:
                 try: 
                     curr_node[1]['*']
-                    return curr_node[0]
+                    return curr_node[1]['*'][0]
                 except:
                     return None
         return curr_node[0]
@@ -69,6 +71,7 @@ class Trie:
         remainder = key
         for symbol in key:
             try:
+#                print "Trying", symbol
                 curr_node = curr_node[1][symbol]
             except KeyError:
                 return (curr_node[0], remainder)
@@ -102,6 +105,7 @@ class Formatter:
 class Word:
     
     def __init__(self, word):
+        self.word = word
         self.lemma = word[:word.index('<')]
         self.tags = reduce(lambda x, y: x + '.' + y, word[word.index('<')+1:-1].split('><'))
 
@@ -115,6 +119,8 @@ if __name__ == "__main__":
    
     t = Trie()
 
+
+    # add the rule in the trie
     t.add('prn.subj.*', 'prn_subj')
     t.add('prn.*', 'prn_subj')
 
@@ -126,13 +132,14 @@ if __name__ == "__main__":
     t.add('n.*', 'nom')
     t.add('np.*', 'nom')
 
-    print t
+    t.add('sent', 'sent')
 
-    data = ['prpers<prn><subj><p1><mf><sg>', 'eat<vblex><pres><smpl>', 'rice<n><sg>', '.<sent>']
-    w = Word(data[1])
-    print w
-    print t.find_relaxed(w.tags)
-    print t.find_prefix(w.tags)
+#    print(t)
 
+    data = ['prpers<prn><subj><p1><mf><sg>', 'eat<vblex><pres>', 'rice<n><sg>', '.<sent>']
 
-
+    for x in data:
+        w = Word(x)
+        print w.tags
+        print t.find_relaxed(w.tags)
+#        print t.find_prefix(w.tags)
