@@ -27,7 +27,7 @@ class Trie:
         curr_node[0] = value
 
 
-    def find(self, key):
+    def find_exact(self, key):
         """
         Return the value for the given key or None if key not found.
         """
@@ -39,6 +39,21 @@ class Trie:
                 curr_node = curr_node[1][symbol]
             except KeyError:
                 return None
+        return curr_node[0]
+
+    def find_relaxed(self, key):
+        
+        key = key.split('.')
+        curr_node = self.root
+        for symbol in key:
+            try:
+                curr_node = curr_node[1][symbol]
+            except KeyError:
+                try: 
+                    curr_node[1]['*']
+                    return curr_node[0]
+                except:
+                    return None
         return curr_node[0]
 
 
@@ -88,10 +103,10 @@ class Word:
     
     def __init__(self, word):
         self.lemma = word[:word.index('<')]
-        self.tags = word[word.index('<')+1:-1].split('><')
+        self.tags = reduce(lambda x, y: x + '.' + y, word[word.index('<')+1:-1].split('><'))
 
     def __str__(self):
-        return self.lemma + ':' +  reduce(lambda x, y: x + '.' + y, self.tags)
+        return self.lemma + ':' +  self.tags
         
 if __name__ == "__main__": 
 
@@ -111,12 +126,13 @@ if __name__ == "__main__":
     t.add('n.*', 'nom')
     t.add('np.*', 'nom')
 
-#    print t
+    print t
 
-    data = ['prpers<prn><subj><p1><mf><sg>', 'eat<vblex><pres>', 'rice<n><sg>', '.<sent>']
-#    print data
-
-    w = Word('prpers<prn><subj><p1><mf><sg>')
+    data = ['prpers<prn><subj><p1><mf><sg>', 'eat<vblex><pres><smpl>', 'rice<n><sg>', '.<sent>']
+    w = Word(data[1])
     print w
+    print t.find_relaxed(w.tags)
+    print t.find_prefix(w.tags)
+
 
 
