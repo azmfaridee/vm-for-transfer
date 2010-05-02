@@ -93,15 +93,6 @@ class Trie:
                 return (valuestring, key)
             valuestring += value
         return (valuestring, key)
-
-class Formatter:
-    """ 
-    The formatter class will created a sequence from the data stream, we for 
-    simplicity right now discarding other types of spaces
-    """
-
-    def __init__(self, data):
-        self.data = []
         
 class Word:
     
