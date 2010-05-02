@@ -1,3 +1,4 @@
+#!/usr/bin/python
 # Originally written by James Tauber http://jtauber.com/ 
 # Modified by Abu Zaher Md. Faridee
 
