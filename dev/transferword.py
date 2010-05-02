@@ -75,14 +75,26 @@ class CodeSegment(object):
             self.linked.append(linkedcode)
 
 class VM(object):
-    def __init__(self, vmstack, trie, codesegment):
-        self.vmstack = vmstack
+    def __init__(self, trie, codesegment):
+        self.vmstack = VMStack()
         self.trie = trie
         self.codesegment = codesegment
+        self.output = []
+        self.pc = 0
 
     def run(self):
-        pass        
-    
+        while True:    
+            print "RUNNING:", self.codesegment.linked[self.pc]
+            opcode = self.codesegment.linked[self.pc].split(' ', 1)
+            # for zero arg instruction
+            if len(opcode) == 1:
+                if opcode[0] == 'hlt': break
+            # for 2 or more arg instruction
+            else:
+                if opcode[0] == 'jmp':
+                    self.pc = int(opcode[1])
+                else:
+                    self.pc += 1
  
 # echo "I eat rice" | apertium -d . en-es-tagger
 # ^prpers<prn><subj><p1><mf><sg>$ ^eat<vblex><pres>$ ^rice<n><sg>$^.<sent>$
@@ -118,7 +130,11 @@ if __name__ == "__main__":
     cs = CodeSegment()
     cs.add('push a', 'start')
     cs.add('push b', 'dummy')
-    cs.add('jmp start')
+#    cs.add('jmp start')
+    cs.add('hlt')
 
     cs.link()
-    print cs.linked
+#    print cs.linked
+
+    vm = VM(t, cs)
+    vm.run()
