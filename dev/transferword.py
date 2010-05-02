@@ -53,6 +53,24 @@ class VMStack(object):
 
     def top(self):
         return self.stack[-1]
+
+class CodeSegment(object):
+    def __init__(self):
+        self.unlinked = []
+        self.linked = []
+        self.labels = {}
+
+    def add(self, codestring, label=None):
+        self.unlinked.append([codestring, label])
+
+    def link(self):
+        for address, code in enumerate(self.unlinked):
+            if code[1] is not None:
+                if code[1] in self.labels:
+                    raise Exception
+                self.labels[code[1]] = address
+            for label, laddress in self.labels.iteritems():
+                self.linked.append(code.replace(label, laddress))
  
 # echo "I eat rice" | apertium -d . en-es-tagger
 # ^prpers<prn><subj><p1><mf><sg>$ ^eat<vblex><pres>$ ^rice<n><sg>$^.<sent>$
@@ -81,6 +99,6 @@ if __name__ == "__main__":
     t.add('sent', 'sent')
 
     # example match againt source lang
-    for tword in twords:
+#    for tword in twords:
 #        print tword.slword.tags
-        print t.find_relaxed(tword.slword.tags)
+#        print t.find_relaxed(tword.slword.tags)
