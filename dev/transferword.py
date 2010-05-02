@@ -1,12 +1,23 @@
 #!/usr/bin/python
+from pprint import pprint
+
+class Word:
+    def __init__(self, word):
+        self.word = word
+        self.lemma = word[:word.index('<')]
+        self.tags = reduce(lambda x, y: x + '.' + y, word[word.index('<')+1:-1].split('><'))
+
+    def __str__(self):
+        return self.lemma + ':' +  self.tags
+
 
 class TransferWord(object):
     def __init__(self, slword, tlword):
-        self.slword = slword
-        self.tlword = tlword
+        self.slword = Word(slword)
+        self.tlword = Word(tlword)
 
     def __str__(self):
-        return "SL: " + self.slword + ", TL: " + self.tlword
+        return "SL: " + str(self.slword) + ", TL: " + str(self.tlword)
 
 class TransferWordFactory(object):
     """
@@ -38,4 +49,4 @@ if __name__ == "__main__":
     string = "^prpers<prn><subj><p1><mf><sg>/prpers<prn><tn><p1><mf><sg>$ ^eat<vblex><pres>/comer<vblex><pres>$ ^rice<n><sg>/arroz<n><m><sg>$^.<sent>/.<sent>$"
     transferWordFactory = TransferWordFactory(string)
     transferWordFactory.generate()
-    words = transferWordFactory.getTransferWord()
+    transferwords = transferWordFactory.getTransferWord()
