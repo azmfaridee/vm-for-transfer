@@ -1,7 +1,8 @@
 #!/usr/bin/python
 from pprint import pprint
+from trie import Trie
 
-class Word:
+class Word(object):
     def __init__(self, word):
         self.word = word
         self.lemma = word[:word.index('<')]
@@ -39,6 +40,19 @@ class TransferWordFactory(object):
             
     def getTransferWord(self):
         return self.transferwords
+
+class VMStack(object):
+    def __init__(self):
+        self.stack = []
+    
+    def push(self, data):
+        self.stack.append(data)
+    
+    def pop(self):
+        return self.stack.pop()
+
+    def top(self):
+        return self.stack[-1]
  
 # echo "I eat rice" | apertium -d . en-es-tagger
 # ^prpers<prn><subj><p1><mf><sg>$ ^eat<vblex><pres>$ ^rice<n><sg>$^.<sent>$
@@ -46,7 +60,27 @@ class TransferWordFactory(object):
 # ^prpers<prn><subj><p1><mf><sg>/prpers<prn><tn><p1><mf><sg>$ ^eat<vblex><pres>/comer<vblex><pres>$ ^rice<n><sg>/arroz<n><m><sg>$^.<sent>/.<sent>$
 
 if __name__ == "__main__":
+    # source string, will be read from stdin
     string = "^prpers<prn><subj><p1><mf><sg>/prpers<prn><tn><p1><mf><sg>$ ^eat<vblex><pres>/comer<vblex><pres>$ ^rice<n><sg>/arroz<n><m><sg>$^.<sent>/.<sent>$"
-    transferWordFactory = TransferWordFactory(string)
-    transferWordFactory.generate()
-    transferwords = transferWordFactory.getTransferWord()
+
+    # generate transfer words from source string
+    twf = TransferWordFactory(string)
+    twf.generate()
+    twords = twf.getTransferWord()
+
+    # create the trie add the rules, this rules will be created from t1x files def-cat section
+    t = Trie()
+    t.add('prn.subj.*', 'prn_subj')
+    t.add('prn.*', 'prn_subj')
+    t.add('vblex.past', 'verbcj')
+    t.add('vblex.pres', 'verbcj')
+    t.add('vblex.past.*', 'verbcj')
+    t.add('vblex.pres.*', 'verbcj')
+    t.add('n.*', 'nom')
+    t.add('np.*', 'nom')
+    t.add('sent', 'sent')
+
+    # example match againt source lang
+    for tword in twords:
+#        print tword.slword.tags
+        print t.find_relaxed(tword.slword.tags)

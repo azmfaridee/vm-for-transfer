@@ -2,8 +2,6 @@
 # Originally written by James Tauber http://jtauber.com/ 
 # Modified by Abu Zaher Md. Faridee
 
-from pprint import pprint
-
 class Trie:
     """
     A Trie is like a dictionary in that it maps keys to values. However,
@@ -93,45 +91,4 @@ class Trie:
                 return (valuestring, key)
             valuestring += value
         return (valuestring, key)
-        
-class Word:
-    
-    def __init__(self, word):
-        self.word = word
-        self.lemma = word[:word.index('<')]
-        self.tags = reduce(lambda x, y: x + '.' + y, word[word.index('<')+1:-1].split('><'))
 
-    def __str__(self):
-        return self.lemma + ':' +  self.tags
-        
-if __name__ == "__main__": 
-
-    # I eat rice
-    # ^prpers<prn><subj><p1><mf><sg>$ ^eat<vblex><pres>$ ^rice<n><sg>$^.<sent>$
-   
-    t = Trie()
-
-
-    # add the rule in the trie
-    t.add('prn.subj.*', 'prn_subj')
-    t.add('prn.*', 'prn_subj')
-
-    t.add('vblex.past', 'verbcj')
-    t.add('vblex.pres', 'verbcj')
-    t.add('vblex.past.*', 'verbcj')
-    t.add('vblex.pres.*', 'verbcj')
-
-    t.add('n.*', 'nom')
-    t.add('np.*', 'nom')
-
-    t.add('sent', 'sent')
-
-#    print(t)
-
-    data = ['prpers<prn><subj><p1><mf><sg>', 'eat<vblex><pres>', 'rice<n><sg>', '.<sent>']
-
-    for x in data:
-        w = Word(x)
-        print w.tags
-        print t.find_relaxed(w.tags)
-#        print t.find_prefix(w.tags)
