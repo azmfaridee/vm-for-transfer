@@ -73,6 +73,15 @@ class CodeSegment(object):
             for label, laddress in self.labels.iteritems():
                 linkedcode = linkedcode.replace(label, str(laddress))
             self.linked.append(linkedcode)
+
+class VM(object):
+    def __init__(self, vmstack, trie, codesegment):
+        self.vmstack = vmstack
+        self.trie = trie
+        self.codesegment = codesegment
+
+    def run(self):
+        pass        
     
  
 # echo "I eat rice" | apertium -d . en-es-tagger
