@@ -56,21 +56,24 @@ class VMStack(object):
 
 class CodeSegment(object):
     def __init__(self):
+        self.labels = {}
         self.unlinked = []
         self.linked = []
-        self.labels = {}
+        self.optimized = []
 
     def add(self, codestring, label=None):
         self.unlinked.append([codestring, label])
 
     def link(self):
         for address, code in enumerate(self.unlinked):
-            if code[1] is not None:
-                if code[1] in self.labels:
-                    raise Exception
-                self.labels[code[1]] = address
+            if code[1] is not None and code[1] not in self.labels:
+                    self.labels[code[1]] = address
+
+            linkedcode = code[0]            
             for label, laddress in self.labels.iteritems():
-                self.linked.append(code.replace(label, laddress))
+                linkedcode = linkedcode.replace(label, str(laddress))
+            self.linked.append(linkedcode)
+    
  
 # echo "I eat rice" | apertium -d . en-es-tagger
 # ^prpers<prn><subj><p1><mf><sg>$ ^eat<vblex><pres>$ ^rice<n><sg>$^.<sent>$
@@ -102,3 +105,11 @@ if __name__ == "__main__":
 #    for tword in twords:
 #        print tword.slword.tags
 #        print t.find_relaxed(tword.slword.tags)
+
+    cs = CodeSegment()
+    cs.add('push a', 'start')
+    cs.add('push b', 'dummy')
+    cs.add('jmp start')
+
+    cs.link()
+    print cs.linked
