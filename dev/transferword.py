@@ -3,6 +3,10 @@ from pprint import pprint
 from trie import Trie
 
 class Word(object):
+    """
+    A single word, broken down to lemma and tags so that it can be processed 
+    faster
+    """
     def __init__(self, word):
         self.word = word
         self.lemma = word[:word.index('<')]
@@ -13,6 +17,9 @@ class Word(object):
 
 
 class TransferWord(object):
+    """
+    Consistes of source lang word and target lang word
+    """
     def __init__(self, slword, tlword):
         self.slword = Word(slword)
         self.tlword = Word(tlword)
@@ -22,9 +29,8 @@ class TransferWord(object):
 
 class TransferWordFactory(object):
     """
-    Not a factory in a true sense
+    Not a true facotory pattern IMHO
     """
-
     def __init__(self, string):
         self.string = string
         self.transferwords = []
@@ -57,6 +63,8 @@ class VMStack(object):
 class CodeSegment(object):
     def __init__(self):
         self.labels = {}
+        # we keep seperate unlinked, linked and optimized code for now for debug
+        # purpose, in reality there will be only one
         self.unlinked = []
         self.linked = []
         self.optimized = []
@@ -80,7 +88,10 @@ class VM(object):
         self.trie = trie
         self.codesegment = codesegment
         self.output = []
+        # program counter
         self.pc = 0
+        # we have 4 standard vars for the VM
+        self.a, self.b, self.c, self.d = [0 for x in range(0, 4)]
 
     def run(self):
         while True:    
