@@ -6,6 +6,7 @@ class Word(object):
     """
     A single word, broken down to lemma and tags so that it can be processed 
     faster
+    FIXME: make sure '<' isn't part of the lemma, check for that
     """
     def __init__(self, word):
         self.word = word
@@ -60,11 +61,14 @@ class VMStack(object):
     def top(self):
         return self.stack[-1]
 
+    def __str__(self):
+        return str(self.stack)
+
 class CodeSegment(object):
     def __init__(self):
         self.labels = {}
         # we keep seperate unlinked, linked and optimized code for now for debug
-        # purpose, in reality there will be only one
+        # purpose, in final implementaion there will be only one
         self.unlinked = []
         self.linked = []
         self.optimized = []
@@ -83,14 +87,12 @@ class CodeSegment(object):
             self.linked.append(linkedcode)
 
 class VM(object):
-    def __init__(self, trie, codesegment):
-        self.vmstack = VMStack()
+    def __init__(self, stack, trie, codesegment):
+        self.vmstack = stack
         self.trie = trie
         self.codesegment = codesegment
         self.output = []
-        # program counter
         self.pc = 0
-        # we have 4 standard vars for the VM
         self.a, self.b, self.c, self.d = [0 for x in range(0, 4)]
 
     def run(self):
@@ -100,13 +102,26 @@ class VM(object):
             # for zero arg instruction
             if len(opcode) == 1:
                 if opcode[0] == 'hlt': break
+                if opcode[0] == 'return':
+                    self.pc = self.vmstack.pop()
+                    self.a, self.b, self.c, self.d = self.vmstack.pop()
+                    
             # for 2 or more arg instruction
             else:
                 if opcode[0] == 'jmp':
                     self.pc = int(opcode[1])
+                elif opcode[0] == 'call':
+                    self.vmstack.push([self.a, self.b, self.c, self.d])
+                    self.vmstack.push(self.pc + 1)
+                    # FIXME: need fix in macro parameter number identification here
+                    # push macro paramerters here
+                    self.pc = int(opcode[1])
+                elif opcode[0] == 'push':
+                    self.vmstack.push(opcode[1])
+                    self.pc += 1
                 else:
                     self.pc += 1
- 
+    
 # echo "I eat rice" | apertium -d . en-es-tagger
 # ^prpers<prn><subj><p1><mf><sg>$ ^eat<vblex><pres>$ ^rice<n><sg>$^.<sent>$
 # echo "I eat rice" | apertium -d . en-es-tagger | lt-proc -b en-es.autobil.bin
@@ -142,10 +157,14 @@ if __name__ == "__main__":
     cs.add('push a', 'start')
     cs.add('push b', 'dummy')
 #    cs.add('jmp start')
+#    cs.('call macro1')
     cs.add('hlt')
 
     cs.link()
 #    print cs.linked
 
-    vm = VM(t, cs)
+    s = VMStack()
+
+    vm = VM(s, t, cs)
     vm.run()
+#    print s
