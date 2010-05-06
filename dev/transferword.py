@@ -52,6 +52,25 @@ class TransferWordFactory(object):
     def getBlanks(self):
         return self.blanks
 
+class VMReader(object):
+    """
+    Class to read text vm instructions and convert that into
+    our code segment
+    """
+    def __init__(self, filename):
+        self.cs = CodeSegment()
+        with open(filename) as f:
+            for line in f:
+                ltext = line.strip().split(':')
+                if ltext[0][0] == '#': continue
+                if len(ltext) == 2:
+                    self.cs.add(ltext[1].strip(), ltext[0].strip())
+                else:
+                    self.cs.add(ltext[0].strip())
+        self.cs.link()
+
+    def getCodeSegment(self):
+        return self.cs
     
 # echo "I eat rice" | apertium -d . en-es-tagger
 # ^prpers<prn><subj><p1><mf><sg>$ ^eat<vblex><pres>$ ^rice<n><sg>$^.<sent>$
@@ -84,16 +103,9 @@ if __name__ == "__main__":
 #        print tword.slword.tags
 #        print t.find_relaxed(tword.slword.tags)
 
-    cs = CodeSegment()
-    cs.add('push a', 'start')
-    cs.add('push b', 'dummy')
-#    cs.add('jmp start')
-#    cs.('call macro1')
-    cs.add('hlt')
-
-    cs.link()
-#    print cs.linked
-
+    reader = VMReader('demo.vm')
+    cs = reader.getCodeSegment()
+    
     s = VMStack()
 
     vm = VM(s, t, cs)
