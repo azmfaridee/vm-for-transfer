@@ -6,7 +6,7 @@ class Word(object):
     """
     A single word, broken down to lemma and tags so that it can be processed 
     faster
-    FIXME: make sure '<' isn't part of the lemma, check for that
+    FIXME: 1. make sure '<' isn't part of the lemma, check for that
     """
     def __init__(self, word):
         self.word = word
@@ -16,37 +16,41 @@ class Word(object):
     def __str__(self):
         return self.lemma + ':' +  self.tags
 
-
 class TransferWord(object):
     """
-    Consistes of source lang word and target lang word
+    Consistes of source lang word, target lang word and immediately
+    following blank
     """
-    def __init__(self, slword, tlword):
+    def __init__(self, slword, tlword, blank):
         self.slword = Word(slword)
         self.tlword = Word(tlword)
+        self.blank = blank
 
     def __str__(self):
         return "SL: " + str(self.slword) + ", TL: " + str(self.tlword)
 
 class TransferWordFactory(object):
-    """
-    Not a true facotory pattern IMHO
-    """
+
     def __init__(self, string):
         self.string = string
         self.transferwords = []
 
     def generate(self):
-        """
-        FIXME: Very naive right now, discards blanks, will fix that later
-        """
         while self.string:
             part = self.string[self.string.index('^')+1:self.string.index('$')]
             self.string = self.string[self.string.index('$')+1:]
-            self.transferwords.append(TransferWord(*part.split('/')))
+            try:
+                blank = self.string[:self.string.index('^')]
+            except ValueError:
+                blank = None
+            slword, tlword = part.split('/')
+            self.transferwords.append(TransferWord(slword, tlword, blank))
             
-    def getTransferWord(self):
+    def getTransferWords(self):
         return self.transferwords
+
+    def getBlanks(self):
+        return self.blanks
 
 class VMStack(object):
     """
@@ -144,7 +148,7 @@ if __name__ == "__main__":
     # generate transfer words from source string
     twf = TransferWordFactory(string)
     twf.generate()
-    twords = twf.getTransferWord()
+    twords = twf.getTransferWords()
 
     # create the trie add the rules, this rules will be created from t1x files def-cat section
     t = Trie()
