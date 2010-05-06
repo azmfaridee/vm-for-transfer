@@ -49,6 +49,9 @@ class TransferWordFactory(object):
         return self.transferwords
 
 class VMStack(object):
+    """
+    The standard stack for the VM
+    """
     def __init__(self):
         self.stack = []
     
@@ -65,6 +68,10 @@ class VMStack(object):
         return str(self.stack)
 
 class CodeSegment(object):
+    """
+    Code segment for the VM, array index is used as the address of code line.
+    VM uses PC (program counter) to browser through the code segment.
+    """
     def __init__(self):
         self.labels = {}
         # we keep seperate unlinked, linked and optimized code for now for debug
@@ -87,6 +94,9 @@ class CodeSegment(object):
             self.linked.append(linkedcode)
 
 class VM(object):
+    """
+    Class for the main virtual machine
+    """
     def __init__(self, stack, trie, codesegment):
         self.vmstack = stack
         self.trie = trie
