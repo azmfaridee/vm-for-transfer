@@ -1,0 +1,6 @@
+start:	push a
+dummy:	push b
+	push c
+#	jmp start
+#	call macro1
+	hlt
