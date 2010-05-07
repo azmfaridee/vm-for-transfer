@@ -1,7 +1,3 @@
-#!/usr/bin/python
-from trie import *
-from vm import *
-
 class Word(object):
     """
     A single word, broken down to lemma and tags so that it can be processed 
@@ -51,63 +47,3 @@ class TransferWordFactory(object):
 
     def getBlanks(self):
         return self.blanks
-
-class VMReader(object):
-    """
-    Class to read text vm instructions and convert that into
-    our code segment
-    """
-    def __init__(self, filename):
-        self.cs = CodeSegment()
-        with open(filename) as f:
-            for line in f:
-                ltext = line.strip().split(':')
-                if ltext[0][0] == '#': continue
-                if len(ltext) == 2:
-                    self.cs.add(ltext[1].strip(), ltext[0].strip())
-                else:
-                    self.cs.add(ltext[0].strip())
-        self.cs.link()
-
-    def getCodeSegment(self):
-        return self.cs
-    
-# echo "I eat rice" | apertium -d . en-es-tagger
-# ^prpers<prn><subj><p1><mf><sg>$ ^eat<vblex><pres>$ ^rice<n><sg>$^.<sent>$
-# echo "I eat rice" | apertium -d . en-es-tagger | lt-proc -b en-es.autobil.bin
-# ^prpers<prn><subj><p1><mf><sg>/prpers<prn><tn><p1><mf><sg>$ ^eat<vblex><pres>/comer<vblex><pres>$ ^rice<n><sg>/arroz<n><m><sg>$^.<sent>/.<sent>$
-
-if __name__ == "__main__":
-    # source string, will be read from stdin
-    string = "^prpers<prn><subj><p1><mf><sg>/prpers<prn><tn><p1><mf><sg>$ ^eat<vblex><pres>/comer<vblex><pres>$ ^rice<n><sg>/arroz<n><m><sg>$^.<sent>/.<sent>$"
-
-    # generate transfer words from source string
-    twf = TransferWordFactory(string)
-    twf.generate()
-    twords = twf.getTransferWords()
-
-    # create the trie add the rules, this rules will be created from t1x files def-cat section
-    t = Trie()
-    t.add('prn.subj.*', 'prn_subj')
-    t.add('prn.*', 'prn_subj')
-    t.add('vblex.past', 'verbcj')
-    t.add('vblex.pres', 'verbcj')
-    t.add('vblex.past.*', 'verbcj')
-    t.add('vblex.pres.*', 'verbcj')
-    t.add('n.*', 'nom')
-    t.add('np.*', 'nom')
-    t.add('sent', 'sent')
-
-    # example match againt source lang
-#    for tword in twords:
-#        print tword.slword.tags
-#        print t.find_relaxed(tword.slword.tags)
-
-    reader = VMReader('demo.vm')
-    cs = reader.getCodeSegment()
-    
-    s = VMStack()
-
-    vm = VM(s, t, cs)
-    vm.run()
-#    print s

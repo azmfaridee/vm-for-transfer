@@ -3,4 +3,13 @@ dummy:	push b
 	push c
 #	jmp start
 #	call macro1
+patrns:	addtrie	prn.subj.*	prn_subj
+    	addtrie	prn.*		prn_subj
+	addtrie	vblex.past	verbcj
+	addtrie	vblex.pres	verbcj
+	addtrie	vblex.past.*	verbcj
+    	addtrie	vblex.pres.*	verbcj
+	addtrie	n.*		nom
+    	addtrie	np.*		nom
+    	addtrie	sent		sent
 	hlt
