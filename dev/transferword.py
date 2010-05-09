@@ -18,15 +18,18 @@ class Word(object):
 class TransferWord(object):
     """
     Consistes of source lang word, target lang word and immediately
-    following blank
+    following blank(s)
     """
     def __init__(self, slword, tlword):
         self.slword = Word(slword)
         self.tlword = Word(tlword)
-        self.blank = []
+        # a transferword can have several superblanks following, so use a list
+        self.blanks = []
 
-    def __str__(self):
-        return "SL: " + str(self.slword) + ", TL: " + str(self.tlword) + ", Blank: " + str(self.blank)
+    #def __str__(self):
+    def __repr__(self):
+        # not a good practice, but still it will do
+        return "SL: " + str(self.slword) + ", TL: " + str(self.tlword) + ", Blank: " + str(self.blanks)    
 
 class TransferWordFactory(object):
 
@@ -36,6 +39,7 @@ class TransferWordFactory(object):
 
     def generate(self):
         while self.string:
+            # superblank
             if self.string[0] == '[':
                 startidx = 0
                 endidx = self.string.index(']') + self.string[self.string.index(']'):].index('$')
@@ -44,7 +48,8 @@ class TransferWordFactory(object):
                 if len(self.transferwords) == 0:
                     self.transferwords.append(TransferWord("", ""))
                 # append this blank to last TransferWord's history
-                self.transferwords[-1].blank.append(TransferWord(*blank.split('/')))
+                self.transferwords[-1].blanks.append(TransferWord(*blank.split('/')))
+            # normal transferword
             else:
                 startidx = self.string.index('^') + 1
                 endidx = self.string.index('$')
@@ -56,6 +61,3 @@ class TransferWordFactory(object):
             
     def getTransferWords(self):
         return self.transferwords
-
-    def getBlanks(self):
-        return self.blanks
