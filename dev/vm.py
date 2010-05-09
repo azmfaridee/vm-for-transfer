@@ -124,5 +124,5 @@ class VM(object):
                     if opcode[0] == 'addtrie':
                         self.trie.add(opcode[1], opcode[2])
                         self.pc += 1
-        except Exception, e:
+        except Exception, err:
             print str(err)
