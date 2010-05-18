@@ -6,11 +6,20 @@ class Word(object):
     """
     def __init__(self, word):
         self.word = word
-        try:
-            self.lemma = word[:word.index('<')]
-            self.tags = reduce(lambda x, y: x + '.' + y, word[word.index('<')+1:-1].split('><'))
-        except ValueError:
-            self.lemma = self.tags = ""
+        # superblank
+        if word[0] == '[' or word[0] == '@':
+            self.superblank = True
+            self.lemma = self.word
+            self.tags = ""
+        # normal word
+        else:
+            self.superblank = False
+            # check for empty word
+            try:
+                self.lemma = word[:word.index('<')]
+                self.tags = reduce(lambda x, y: x + '.' + y, word[word.index('<')+1:-1].split('><'))
+            except ValueError:
+                self.lemma = self.tags = ""
 
     def __str__(self):
         return self.lemma + ':' +  self.tags
