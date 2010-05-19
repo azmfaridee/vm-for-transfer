@@ -22,6 +22,8 @@ patrns:	addtrie	prn.subj.*	prn_subj
 # we can specify the lemma before the tag pattern (3 operand addtrie)
 #	addtrie	mouse		n.sg	mouse
 # if no lemma specifiied (2 operand addtrie), act as normal
+
+# FIXME: removal of white space from the operands in an elegent way
 #	addtrie			det	det
 
 	hlt
