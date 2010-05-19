@@ -14,12 +14,16 @@ class VMReader(object):
         self.cs = CodeSegment()
         with open(filename) as f:
             for line in f:
-                ltext = line.strip().split(':')
-                if ltext[0][0] == '#': continue
-                if len(ltext) == 2:
-                    self.cs.add(ltext[1].strip(), ltext[0].strip())
+                ltext = line.strip()
+                if len(ltext) == 0: continue
                 else:
-                    self.cs.add(ltext[0].strip())
+                    if ltext[0] == '#': continue
+                    else:
+                        ltext = ltext.split(':')
+                        if len(ltext) == 2:
+                            self.cs.add(ltext[1].strip(), ltext[0].strip())
+                        else:
+                            self.cs.add(ltext[0].strip())
         self.cs.link()
 
     def getCodeSegment(self):
