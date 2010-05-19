@@ -1,3 +1,6 @@
 Author: Abu Zaher
 
-I'm testing the possibilty of bytecode for transfer using Google's V8
+Current state:
+- Working on the compiler
+  - which XML parser to use?
+- Change the search algo in the Trie
