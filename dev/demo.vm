@@ -11,5 +11,17 @@ patrns:	addtrie	prn.subj.*	prn_subj
     	addtrie	vblex.pres.*	verbcj
 	addtrie	n.*		nom
     	addtrie	np.*		nom
-    	addtrie	sent		sent
+	addtrie	sent		sent
+
+# adding some new patterns that include both lemma and tags
+# the new syntax is as folllows
+# \w for placeholder for matching any word
+# e.g. the<det>, that<det> -> \w<det>\t
+# \t end of tag e.g. mouse<n><sg>\t
+
+# we can specify the lemma before the tag pattern (3 operand addtrie)
+#	addtrie	mouse		n.sg	mouse
+# if no lemma specifiied (2 operand addtrie), act as normal
+#	addtrie			det	det
+
 	hlt
