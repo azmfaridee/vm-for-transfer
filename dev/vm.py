@@ -120,9 +120,12 @@ class VM(object):
                     #    self.pc += 1
                     else:
                         self.pc += 1
-                else:
+                elif len(opcode) == 3:
                     if opcode[0] == 'addtrie':
                         self.trie.add(opcode[1], opcode[2])
                         self.pc += 1
+                # FIXME: do we really need three operand opcode?
+                else:
+                    pass
         except Exception, err:
             print str(err)
