@@ -25,15 +25,16 @@ def test_chop():
         _chop(x)
 
 def _chop(s):
-    try:
-        # the pattern must also be raw for the same reason
-        p = re.compile(r'^(\\w|\\t)')
-        m = p.match(s)
-        print s, m.group()
-    except AttributeError, e:
-        pass
+    # the pattern must also be raw for the same reason
+    l = []
+    while s:
+        m = re.compile(r'^((\\w)|(\\t)|(\s+)|(\w)|(<\w+>))', re.LOCALE | re.UNICODE).match(s)
+        if m is not None:
+            l.append(m.group())
+            s = s[len(m.group()):]
+    print l
     
 
 if __name__ == "__main__":
-    test_transferword()
+    ## test_transferword()
     test_chop()
