@@ -1,6 +1,9 @@
 import xml.parsers.expat
 import codecs
 from pprint import pprint
+import sys
+
+DEBUG_MODE = False
 
 stack = []
 codestack = []
@@ -94,10 +97,10 @@ def start_element(name, attrs):
         npar = int(attrs['npar'])
 
     if name == 'clip':
-        codestack.append([len(stack), handle_clip(name, attrs)])
+        codestack.append([len(stack), 'clip', handle_clip(name, attrs)])
     
     if name == 'lit-tag':
-        codestack.append([len(stack), handle_lit_tag(name, attrs)])
+        codestack.append([len(stack), 'lit-tag', handle_lit_tag(name, attrs)])
 
 def handle_lit_tag(name, attrs):
     code = []
@@ -125,11 +128,17 @@ def handle_clip(name, attrs):
         if store_mode == False:
             if attrs['side'] == 'sl': code.append('clipsl')
             else:                     code.append('cliptl')
+    else:
+        code.append('#DUMMY: lem, lemh, lemq, whole, tags')
 #    print attrs['part'], code
     return code
     
 def end_element(name):
     pitem = stack[-1]
+   
+    if DEBUG_MODE == True and 'def-macro' in zip(*stack)[0]:
+        print 'DEBUG: element', name, 'codestack', codestack
+        pass
     
     # if this node is not a leaf as well as not from
     # declaration section
@@ -142,7 +151,8 @@ def end_element(name):
         # pop all the values from stack which have higher depth than
         # current depth, then add them to code_buff
         while len(codestack) > 0 and codestack[-1][0] > depth:
-            code_buff.insert(0, codestack[-1][1])
+            for statement in codestack[-1][2]:
+                code_buff.insert(0, statement)
             # print codestack, code_buff
             codestack.pop(-1)
 
@@ -178,7 +188,7 @@ def end_element(name):
         for x in code_buff:
             code.append(x)
         # insert this new code into code_stack
-        codestack.append([depth, code])
+        codestack.append([depth, name, code])
 
     # pop the item from call stack
     stack.pop(-1)
@@ -195,7 +205,8 @@ if __name__  == '__main__':
     p.CharacterDataHandler = char_data
 
 
-    f = codecs.open('apertium-en-ca.en-ca.t1x', 'r', 'utf-8')
+#    f = codecs.open('apertium-en-ca.en-ca.t1x', 'r', 'utf-8')
+    f = codecs.open('input-compiler/set1.t1x', 'r', 'utf-8')
     s = f.read()
     p.Parse(s.encode('utf-8'))
 
