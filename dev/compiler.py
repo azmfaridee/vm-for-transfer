@@ -3,7 +3,7 @@ import codecs
 from pprint import pprint
 import sys
 
-DEBUG_MODE = False
+DEBUG_MODE = True
 
 stack = []
 codestack = []
@@ -123,7 +123,9 @@ def handle_clip(name, attrs):
     if attrs['part'] not in ['lem', 'lemh', 'lemq', 'whole', 'tags']:
         # FIXME: has to come up with a better version of the regex
         regex = reduce(lambda x, y: x + '|' + y, def_attrs[attrs['part']])
+        # push pos
         code.append('push\t' + attrs['pos'])
+        # push regex
         code.append('push\t' + regex)
         if store_mode == False:
             if attrs['side'] == 'sl': code.append('clipsl')
@@ -135,10 +137,10 @@ def handle_clip(name, attrs):
     
 def end_element(name):
     pitem = stack[-1]
-   
+
+    # skip the def-cat section, only def-macro and rules section
     if DEBUG_MODE == True and 'def-macro' in zip(*stack)[0]:
-        print 'DEBUG: element', name, 'codestack', codestack
-        pass
+        print 'DEBUG IN: element', name, 'codestack', codestack
     
     # if this node is not a leaf as well as not from
     # declaration section
@@ -151,7 +153,8 @@ def end_element(name):
         # pop all the values from stack which have higher depth than
         # current depth, then add them to code_buff
         while len(codestack) > 0 and codestack[-1][0] > depth:
-            for statement in codestack[-1][2]:
+            # need to do a reverse, don't actually remember why now :(
+            for statement in reversed(codestack[-1][2]):
                 code_buff.insert(0, statement)
             # print codestack, code_buff
             codestack.pop(-1)
@@ -189,6 +192,11 @@ def end_element(name):
             code.append(x)
         # insert this new code into code_stack
         codestack.append([depth, name, code])
+        
+    if DEBUG_MODE == True and 'def-macro' in zip(*stack)[0]:
+        print 'DEBUG OUT: element', name, 'codestack', codestack
+        print
+    
 
     # pop the item from call stack
     stack.pop(-1)
@@ -206,7 +214,7 @@ if __name__  == '__main__':
 
 
 #    f = codecs.open('apertium-en-ca.en-ca.t1x', 'r', 'utf-8')
-    f = codecs.open('input-compiler/set1.t1x', 'r', 'utf-8')
+    f = codecs.open('input-compiler/set2.t1x', 'r', 'utf-8')
     s = f.read()
     p.Parse(s.encode('utf-8'))
 
@@ -214,4 +222,4 @@ if __name__  == '__main__':
     #print def_cats
     #print def_attrs
     #print def_lists
-    pprint(codestack)
+    #pprint(codestack)
