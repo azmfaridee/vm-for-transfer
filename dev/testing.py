@@ -6,6 +6,7 @@
 
 from transferword import *
 import re
+from trie import Trie
 
 def test_transferword():
     print "Testing transferword"
@@ -22,7 +23,7 @@ def test_chop():
     # interpreted as tab
     l = [r'\w mouse<n><sg>\t', r'the<det>\t mouse<n><sg>\t']
     for x in l:
-        _chop(x)
+        print _chop(x)
 
 def _chop(s):
     # the pattern must also be raw for the same reason
@@ -32,9 +33,20 @@ def _chop(s):
         if m is not None:
             l.append(m.group())
             s = s[len(m.group()):]
-    print l
-    
+    return l
+
+
+def test_trie():
+    print "Testing trie"
+    t = Trie()
 
 if __name__ == "__main__":
-    ## test_transferword()
-    test_chop()
+    try:
+        print "Beginning test\n------------------------"
+        ## test_transferword()
+        ## test_chop()
+        test_trie()
+        print "------------------------\nTest successfully completed"
+    except Exception, e:
+        print "Error:", e
+        print "Test aborted due to error"

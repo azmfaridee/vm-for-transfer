@@ -2,6 +2,8 @@
 # Originally written by James Tauber http://jtauber.com/ 
 # Modified by Abu Zaher Md. Faridee
 
+import re
+
 class Trie:
     """
     A Trie is like a dictionary in that it maps keys to values. However,
@@ -16,17 +18,33 @@ class Trie:
         return str(self.root)
 
 
-    def add(self, key, value):
+    def add(self, key, value, mode='normal'):
         """
         Add the given value for the given key.
         """
-        
-        key = key.split('.')        
+
+        if mode == 'normal': key = key.split('.')
+        else: key = self._chop(key)
         curr_node = self.root
         for symbol in key:
             curr_node = curr_node[1].setdefault(symbol, [None, {}])
         curr_node[0] = value
 
+    def _chop(self, s):
+        """
+        This function is used to tokenize the pattern, given pattern, returns a list
+        of tokens that can be directly inserted into the trie and later matched against
+        """
+        l = []
+        while s:
+            # NOTE: the pattern must also be raw
+            # FIXME: mouse<n><sg> -> m o u s e <n> <sg>
+            #        .<sent> -> . <sent> --> need regex for this type of punctuation marks too
+            m = re.compile(r'^((\\w)|(\\t)|(\s+)|[\w.;]|(<\w+>))', re.LOCALE | re.UNICODE).match(s)
+            if m is not None:
+                l.append(m.group())
+                s = s[len(m.group()):]
+        return l        
 
     def find_exact(self, key):
         """
