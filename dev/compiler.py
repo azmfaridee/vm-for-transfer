@@ -12,6 +12,8 @@ codestack = []
 # use this dictionary to keep track of current tags chindren
 children = {}
 labels = []
+chooseid = 1
+whenid = 1
 
 def_cats = {}
 def_attrs = {}
@@ -118,6 +120,17 @@ def start_element(name, attrs):
         code = [label + ':	nop']
         codestack.append([len(stack), 'def-macro', code])
 
+    if name == 'choose':
+        ## label = u'choose' + str(chooseid) + u'_start'
+        ## labels.append(label)
+        pass
+
+    if name == 'when':
+        label = u'when' + str(whenid) + u'_start'
+        labels.append(label)
+        code = [label + ':	nop']
+        codestack.append([len(stack), 'when', code])
+
     if name == 'clip':
         code = handle_clip(name, attrs)
         codestack.append([len(stack), 'clip', code])
@@ -197,6 +210,7 @@ def end_element(name):
                     code_buff.append(u'cmpi')
             except KeyError:
                 code_buff.append(u'cmp')
+                
         if name == 'begins-with':
             pass
         if name == 'ends-with':
@@ -208,8 +222,28 @@ def end_element(name):
 
         if name == 'def-macro':
             label =   'macro_' + pitem[1]['n'] + '_end'
-            code_buff.append(label + ':	nop')
+            # end of marco, return
+            code_buff.append(label + ':	ret')
             labels.append(label)
+
+        if name == 'choose':
+            ## global chooseid
+            ## label = u'choose' + str(chooseid) + u'_end'
+            ## labels.append(label)
+            ## chooseid += 1
+            pass
+
+        if name == 'when':
+            global whenid
+            
+            label = u'when' + str(whenid) + u'_end'
+            labels.append(label)
+
+            code_buff.append(label + ':	nop')
+            whenid += 1
+
+        if name == 'test':
+            code_buff.append(u'jnz	when' + str(whenid) + '_end')
 
         if name == 'let':
             try:
@@ -223,8 +257,8 @@ def end_element(name):
             except ValueError:
                 pass
  
-        code = []
         # merge code buff into a new code segment
+        code = []
         for x in code_buff:
             code.append(x)
         # insert this new code into code_stack
@@ -263,5 +297,7 @@ if __name__  == '__main__':
     #print def_cats
     #print def_attrs
     #print def_lists
-    pprint(codestack)
-    print labels
+    #pprint(codestack)
+    #print labels
+    for code in codestack[0][2]:
+        print code
