@@ -3,22 +3,29 @@ import codecs
 from pprint import pprint
 import sys
 
-DEBUG_MODE = True
+DEBUG_MODE = False
 
+# this stack holds information of the tree
 stack = []
+# genereated codes are held in the this stack and merged when necessary
 codestack = []
+# use this dictionary to keep track of current tags chindren
+children = {}
+
 def_cats = {}
 def_attrs = {}
+# generated regex from input def_attrs
 def_attrs_regex = {}
 def_lists = {}
 
-# these tags consist actual leafs
+# only these tags consist actual leafs
 leaf_tags = ['clip', 'lit', 'lit-tag', 'with-param', 'var',  'b', 'list', 'pattern-item']
 
+# these tags do not need processging for code generation
 # more tags to clarify: transfer, section-rules
 dec_tags = ['cat-item', 'def-cat', 'section-def-cats', 'attr-item', 'def-attr', 'section-def-attrs', 'def-var', 'list-item', 'def-list', 'section-def-vars', 'section-def-lists']
 
-# longest common substring
+# longest common substring function
 lcs = lambda a, b: lcs(a[:-1], b) if b.find(a) == -1 else a
 
 def process_def_attrs():
@@ -129,7 +136,7 @@ def handle_clip(name, attrs):
         code.append('push\t' + regex)
         if store_mode == False:
             if attrs['side'] == 'sl': code.append('clipsl')
-            else:                     code.append('cliptl')
+            elif attrs['side'] == 'tl': code.append('cliptl')
     else:
         code.append('#DUMMY: lem, lemh, lemq, whole, tags')
 #    print attrs['part'], code
@@ -222,4 +229,4 @@ if __name__  == '__main__':
     #print def_cats
     #print def_attrs
     #print def_lists
-    #pprint(codestack)
+    pprint(codestack)
