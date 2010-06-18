@@ -11,6 +11,7 @@ stack = []
 codestack = []
 # use this dictionary to keep track of current tags chindren
 children = {}
+labels = []
 
 def_cats = {}
 def_attrs = {}
@@ -109,16 +110,21 @@ def start_element(name, attrs):
         def_lists[def_list_id].append(attrs['v'])
 
     if name == 'def-macro':
-        code = []
-        
         macro_name = attrs['n']
         npar = int(attrs['npar'])
+        label =  'macro_ ' + macro_name + '_start'
+
+        labels.append(label)
+        code = [label + ':	nop']
+        codestack.append([len(stack), 'def-macro', code])
 
     if name == 'clip':
-        codestack.append([len(stack), 'clip', handle_clip(name, attrs)])
+        code = handle_clip(name, attrs)
+        codestack.append([len(stack), 'clip', code])
     
     if name == 'lit-tag':
-        codestack.append([len(stack), 'lit-tag', handle_lit_tag(name, attrs)])
+        code = handle_lit_tag(name, attrs)
+        codestack.append([len(stack), 'lit-tag', code])
 
 def handle_lit_tag(name, attrs):
     code = []
@@ -146,8 +152,8 @@ def handle_clip(name, attrs):
         # push regex
         code.append('push\t' + regex)
         if store_mode == False:
-            if attrs['side'] == 'sl': code.append('clipsl')
-            elif attrs['side'] == 'tl': code.append('cliptl')
+            if attrs['side'] == 'sl': code.append(u'clipsl')
+            elif attrs['side'] == 'tl': code.append(u'cliptl')
     else:
         code.append('#DUMMY: lem, lemh, lemq, whole, tags')
 #    print attrs['part'], code
@@ -188,9 +194,9 @@ def end_element(name):
             # check if caseless
             try:
                 if pitem[1]['caseless'] == 'yes':
-                    code_buff.append('cmpi')
+                    code_buff.append(u'cmpi')
             except KeyError:
-                code_buff.append('cmp')
+                code_buff.append(u'cmp')
         if name == 'begins-with':
             pass
         if name == 'ends-with':
@@ -200,14 +206,20 @@ def end_element(name):
         if name == 'in':
             pass
 
+        if name == 'def-macro':
+            label =   'macro_' + pitem[1]['n'] + '_end'
+            code_buff.append(label + ':	nop')
+            labels.append(label)
+
         if name == 'let':
             try:
                 # try to find the index of clip
                 index = zip(*children[name])[0].index('clip')
                 if children[name][index][1]['side'] == 'sl':
-                    code_buff.append('storesl')
+                    # storesl is most probably not not used
+                    code_buff.append(u'storesl')
                 elif children[name][index][1]['side'] == 'tl':
-                    code_buff.append('storetl')
+                    code_buff.append(u'storetl')
             except ValueError:
                 pass
  
@@ -252,3 +264,4 @@ if __name__  == '__main__':
     #print def_attrs
     #print def_lists
     pprint(codestack)
+    print labels
