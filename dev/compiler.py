@@ -3,7 +3,7 @@ import codecs
 from pprint import pprint
 import sys
 
-DEBUG_MODE = False
+DEBUG_MODE = True
 
 # this stack holds information of the tree
 stack = []
@@ -48,6 +48,15 @@ def process_def_attrs():
 # 3 handler functions
 def start_element(name, attrs):
     stack.append([name, attrs])
+
+    if name not in children.keys():
+        # empty entry for this node
+        children[name] = []
+        # update this nodes parent with this child nodes value
+        if len(stack) > 1:
+            if name not in children[stack[-2][0]]:
+                children[stack[-2][0]].append(name)
+    #print 'XX', name, children
 
     if name == 'cat-item':
         def_cat_id = stack[-2][1]['n']
@@ -205,6 +214,9 @@ def end_element(name):
         print
     
 
+    # pop the items children list
+    children.pop(name, None)
+    #print 'YY', name, children
     # pop the item from call stack
     stack.pop(-1)
     
@@ -229,4 +241,4 @@ if __name__  == '__main__':
     #print def_cats
     #print def_attrs
     #print def_lists
-    pprint(codestack)
+    #pprint(codestack)
