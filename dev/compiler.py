@@ -3,7 +3,7 @@ import codecs
 from pprint import pprint
 import sys
 
-DEBUG_MODE = True
+DEBUG_MODE = False
 
 # this stack holds information of the tree
 stack = []
@@ -49,14 +49,16 @@ def process_def_attrs():
 def start_element(name, attrs):
     stack.append([name, attrs])
 
-    if name not in children.keys():
+    # skip the dec_tags
+    if name not in children.keys() and name not in dec_tags:
         # empty entry for this node
         children[name] = []
         # update this nodes parent with this child nodes value
         if len(stack) > 1:
-            if name not in children[stack[-2][0]]:
-                children[stack[-2][0]].append(name)
+            if [name, attrs] not in children[stack[-2][0]]:
+                children[stack[-2][0]].append([name, attrs])
     #print 'XX', name, children
+    #print
 
     if name == 'cat-item':
         def_cat_id = stack[-2][1]['n']
@@ -156,7 +158,7 @@ def end_element(name):
 
     # skip the def-cat section, only def-macro and rules section
     if DEBUG_MODE == True and 'def-macro' in zip(*stack)[0]:
-        print 'DEBUG IN: element', name, 'codestack', codestack
+        print 'DEBUG IN: ELEMENT', name, 'ELEMENT', codestack
     
     # if this node is not a leaf as well as not from
     # declaration section
@@ -199,9 +201,16 @@ def end_element(name):
             pass
 
         if name == 'let':
-            #print 'DEBUG', code_buff
-            pass
-
+            try:
+                # try to find the index of clip
+                index = zip(*children[name])[0].index('clip')
+                if children[name][index][1]['side'] == 'sl':
+                    code_buff.append('storesl')
+                elif children[name][index][1]['side'] == 'tl':
+                    code_buff.append('storetl')
+            except ValueError:
+                pass
+ 
         code = []
         # merge code buff into a new code segment
         for x in code_buff:
@@ -210,13 +219,14 @@ def end_element(name):
         codestack.append([depth, name, code])
         
     if DEBUG_MODE == True and 'def-macro' in zip(*stack)[0]:
-        print 'DEBUG OUT: element', name, 'codestack', codestack
+        print 'DEBUG OUT: ELEMENT', name, 'CODESTACK', codestack
         print
     
 
     # pop the items children list
     children.pop(name, None)
     #print 'YY', name, children
+    #print
     # pop the item from call stack
     stack.pop(-1)
     
@@ -241,4 +251,4 @@ if __name__  == '__main__':
     #print def_cats
     #print def_attrs
     #print def_lists
-    #pprint(codestack)
+    pprint(codestack)
