@@ -15,11 +15,20 @@ labels = []
 chooseid = 1
 whenid = 1
 
+# delayed codes are stored here
+pending_code = []
+
 def_cats = {}
 def_attrs = {}
 # generated regex from input def_attrs
 def_attrs_regex = {}
 def_lists = {}
+variables = {}
+
+# mode variables
+macro_mode = False
+assign_mode = False
+store_mode = False
 
 # only these tags consist actual leafs
 leaf_tags = ['clip', 'lit', 'lit-tag', 'with-param', 'var',  'b', 'list', 'pattern-item']
@@ -33,7 +42,6 @@ lcs = lambda a, b: lcs(a[:-1], b) if b.find(a) == -1 else a
 
 def process_def_attrs():
     for def_attr in def_attrs.keys():
-        # 
         def_attrs_regex[def_attr] = reduce(lambda x, y: x + '|' + y, def_attrs[def_attr])
 
         # FIXME: trying to do some optimization in regex
@@ -104,6 +112,11 @@ def start_element(name, attrs):
 
         def_attrs[def_attr_id].append(regex)
 
+    if name == 'def-var':
+        vname = attrs['n']
+        value = attrs.setdefault('v', '')
+        variables[vname] = value
+
     if name == 'list-item':
         def_list_id = stack[-2][1]['n']
         if def_list_id not in def_lists:
@@ -112,6 +125,8 @@ def start_element(name, attrs):
         def_lists[def_list_id].append(attrs['v'])
 
     if name == 'def-macro':
+        macro_mode = True
+        
         macro_name = attrs['n']
         npar = int(attrs['npar'])
         label =  'macro_ ' + macro_name + '_start'
@@ -137,7 +152,15 @@ def start_element(name, attrs):
     
     if name == 'lit-tag':
         code = handle_lit_tag(name, attrs)
+        codestack.append([len(stack), 'lit-tag', code])        
+
+    if name == 'lit':
+        # FIXME: fix the problem with empty lit e.g. <lit v=""/>
+        code = ['push	' + attrs['v']]
         codestack.append([len(stack), 'lit-tag', code])
+
+    if name == 'def-macro':
+        macro_mode = True
 
 def handle_lit_tag(name, attrs):
     code = []
@@ -146,30 +169,39 @@ def handle_lit_tag(name, attrs):
     return code
 
 def handle_clip(name, attrs):
-    macro_mode = False
-    store_mode = False
-    
-    for item in stack:
-        if item[0] == 'def-macro':
-            macro_mode = True
-        if item[0] == 'let':
-            store_mode = True
-
     code = []
     # FIXME: create code for lem, lemh, lemq, whole, tags
+    regex = ''
     if attrs['part'] not in ['lem', 'lemh', 'lemq', 'whole', 'tags']:
         # FIXME: has to come up with a better version of the regex
-        regex = reduce(lambda x, y: x + '|' + y, def_attrs[attrs['part']])
-        # push pos
-        code.append('push\t' + attrs['pos'])
-        # push regex
-        code.append('push\t' + regex)
-        if store_mode == False:
-            if attrs['side'] == 'sl': code.append(u'clipsl')
-            elif attrs['side'] == 'tl': code.append(u'cliptl')
+        regex = reduce(lambda x, y: x + '|' + y, def_attrs[attrs['part']])        
     else:
-        code.append('#DUMMY: lem, lemh, lemq, whole, tags')
-#    print attrs['part'], code
+        if attrs['part'] == 'lem':
+            regex = 'DUMMY REGEX lem                         '
+        elif  attrs['part'] == 'lemh':
+            regex = 'DUMMY REGEX lemh'            
+        elif  attrs['part'] == 'lemq':
+            regex = 'DUMMY REGEX lemq'            
+        elif  attrs['part'] == 'whole':
+            regex = 'DUMMY REGEX whole'            
+        elif  attrs['part'] == 'tags ':
+            regex = 'DUMMY REGEX tags'           
+        
+    # push pos
+    code.append('push\t' + attrs['pos'])
+    # push regex
+    code.append('push\t' + regex)
+
+    if 'let' in children.keys():
+        if len(children['let']) == 1:
+            pass
+#            if attrs['side'] == 'sl': pending_code.append(['let': u'storesl'])
+#            elif attrs['side'] == 'tl': pending_code.append(['let: 'u'storetl']
+    
+    if store_mode == False:
+        if attrs['side'] == 'sl': code.append(u'clipsl')
+        elif attrs['side'] == 'tl': code.append(u'cliptl')
+        
     return code
     
 def end_element(name):
@@ -226,6 +258,8 @@ def end_element(name):
             code_buff.append(label + ':	ret')
             labels.append(label)
 
+            macro_mode = False
+
         if name == 'choose':
             ## global chooseid
             ## label = u'choose' + str(chooseid) + u'_end'
@@ -246,16 +280,26 @@ def end_element(name):
             code_buff.append(u'jnz	when' + str(whenid) + '_end')
 
         if name == 'let':
-            try:
-                # try to find the index of clip
-                index = zip(*children[name])[0].index('clip')
-                if children[name][index][1]['side'] == 'sl':
-                    # storesl is most probably not not used
-                    code_buff.append(u'storesl')
-                elif children[name][index][1]['side'] == 'tl':
-                    code_buff.append(u'storetl')
-            except ValueError:
+            zipped = zip(*children[name])
+            container = zipped[0][0]
+            value = zipped[0][1]
+            
+            # FIXME: do we need to check where the value is lit or lit-tag?
+            if container == 'clip':
+                try:
+                    if children[name][0][1]['side'] == 'sl':
+                        # storesl is most probably not used
+                        code_buff.append(u'storesl')
+                    elif children[name][0][1]['side'] == 'tl':
+                        code_buff.append(u'storetl')
+                except ValueError:
+                    pass                
                 pass
+            elif container == 'var':
+                pass
+
+        if name == 'def-macro':
+            macro_mode = False
  
         # merge code buff into a new code segment
         code = []
@@ -289,7 +333,7 @@ if __name__  == '__main__':
 
 
 #    f = codecs.open('apertium-en-ca.en-ca.t1x', 'r', 'utf-8')
-    f = codecs.open('input-compiler/set2.t1x', 'r', 'utf-8')
+    f = codecs.open('input-compiler/set3.t1x', 'r', 'utf-8')
     s = f.read()
     p.Parse(s.encode('utf-8'))
 
