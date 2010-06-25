@@ -1,11 +1,6 @@
 import xml.parsers.expat, sys, codecs
 
 class ExpatParser(object):
-    Parser = None
-    fileName = ''
-    compiler = None
-    tags = []
-
     def __init__(self, fileName, compiler):
         self.fileName = fileName
         self.Parser = xml.parsers.expat.ParserCreate()
@@ -42,12 +37,18 @@ class ExpatParser(object):
     
     def handleEndElement(self, name):
         callStack = self.compiler.callStack
-        topdata = callStack.getTop()
-
+        #parent.addChild(child)
+        
         print 'END',  callStack
         print
         
         callStack.pop()
+
+        parent = callStack.getTop(2)
+        if parent != None:
+            child = callStack.getTop()
+            print "Parent", parent, "\nChild", child
+            #parent.childs.append(child)
 
 
 class CallStack(object):
@@ -102,13 +103,10 @@ class EventHandler(object):
         pass
 
 class Event(object):
-    name = ''
-    attrs = {}
-    childs = []
-
     def __init__(self, name, attrs):
         self.name = name
         self.attrs = attrs
+        self.childs = []
 
     def __eq__(self, other):
         if self.name == other.name and self.attrs == other.attrs:
@@ -139,6 +137,6 @@ class Compiler(object):
 
 
 if __name__ == '__main__':
-    inputfile = 'input-compiler/set3.t1x'
+    inputfile = 'input-compiler/set0.t1x'
     compiler = Compiler(inputfile)
     compiler.compile()
