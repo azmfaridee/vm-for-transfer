@@ -15,7 +15,7 @@ class ExpatParser(object):
             fileContent = xmlFile.read().encode('utf-8')
             self.Parser.Parse(fileContent)
         except IOError:
-            print "ERROR: Cannot open the transfer file specified!"
+            print "FATAL ERROR: Cannot open the transfer file specified!"
             sys.exit(0)
 
     def handleCharData(self, data): pass
@@ -64,7 +64,7 @@ class CallStack(object):
         try:
             topdata = self.stack[-index]
         except IndexError:
-            print >> sys.stderr, 'ERROR: Out of index access in stack'
+            print >> sys.stderr, 'WARNING: Out of index access in stack'
             topdata = None
         return topdata
 
@@ -72,7 +72,7 @@ class CallStack(object):
         try:
             self.stack.pop()
         except IndexError:
-            print >> sys.stderr, 'ERROR: Out of index access in stack'
+            print >> sys.stderr, 'WARNING: Out of index access in stack'
 
     def find(self, findevent):
         for event in reversed(self.stack):
