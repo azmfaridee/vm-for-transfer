@@ -1,4 +1,4 @@
-import xml.parsers.expat
+oimport xml.parsers.expat
 import codecs
 from pprint import pprint
 import sys

@@ -123,6 +123,35 @@ class EventHandler(object):
         #print 'Handlng def-cats'
         pass
 
+    def handle_cat_item_start(self, event):
+        def_cat = self.callStack.getTop(2)
+        def_cat_id = def_cat.attrs['n']
+        if def_cat_id not in self.compiler.def_cats:
+            self.compiler.def_cats[def_cat_id] = []
+
+        # lemma is OPTIONAL in DTD
+        if 'lemma' in event.attrs.keys():
+            regex = event.attrs['lemma']
+        else:
+            regex = '\w'
+
+        # tags is REQUIRED in DTD
+        # but still for safety we're checking
+        if 'tags' in event.attrs.keys():
+            tags = event.attrs['tags'].split('.')
+            for tag in tags:
+                # FIXME: what to do in case of empty tags?
+                if tag == '':
+                    continue
+                if tag == '*':
+                    regex = regex + '\\t'
+                    continue
+                regex = regex + '<' + tag + '>'
+        else:
+            regex = regex + '\t'
+
+        self.compiler.def_cats[def_cat_id].append(regex)
+        
 class Event(object):
     def __init__(self, name, attrs):
         self.name = name
@@ -142,6 +171,7 @@ class Compiler(object):
     def __init__(self, xmlfile):
         self.callStack = CallStack()
         self.parentRecord = ParentRecord()
+        self.def_cats = {}
 
         self.parser = ExpatParser(xmlfile, self)
         self.eventHandler = EventHandler(self)
@@ -156,4 +186,5 @@ class Compiler(object):
 if __name__ == '__main__':
     inputfile = 'input-compiler/set1.t1x'
     compiler = Compiler(inputfile)
-    compiler.compile() 
+    compiler.compile()
+    print compiler.def_cats
