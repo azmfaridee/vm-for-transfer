@@ -1,5 +1,8 @@
 import xml.parsers.expat, sys, codecs
 
+skip_tags = ['cat-item', 'def-cat', 'section-def-cats', 'attr-item', 'def-attr', 'section-def-attrs', 'def-var', 'list-item', 'def-list', 'section-def-vars', 'section-def-lists']
+
+
 class ExpatParser(object):
     def __init__(self, fileName, compiler):
         self.fileName = fileName
@@ -8,6 +11,7 @@ class ExpatParser(object):
         self.Parser.StartElementHandler = self.handleStartElement
         self.Parser.EndElementHandler = self.handleEndElement
         self.compiler = compiler
+        self.callStack = self.compiler.callStack
 
     def parse(self):
         try:
@@ -21,13 +25,19 @@ class ExpatParser(object):
     def handleCharData(self, data): pass
     
     def handleStartElement(self, name, attrs):
+        global skip_tags
         event = Event(name, attrs)
 
-        callStack = self.compiler.callStack
-        callStack.push(event)
+        self.callStack.push(event)
 
-        print 'START', callStack
+        print 'START', self.callStack
         print
+
+        #parent = callStack.getTop(2)
+        #if parent != None and name not in skip_tags:
+        #    child = callStack.getTop()
+        #    print "PARENT", parent, "\nCHILD", child
+            #parent.childs.append(child)
         
         handler = self.compiler.eventHandler
         method_name = 'handle_' + name.replace('-', '_') + '_start'
@@ -36,26 +46,32 @@ class ExpatParser(object):
             method(event)
     
     def handleEndElement(self, name):
-        callStack = self.compiler.callStack
-        #parent.addChild(child)
-        
-        print 'END',  callStack
+        print 'END',  self.callStack
         print
         
-        callStack.pop()
+        self.callStack.pop()
 
-        parent = callStack.getTop(2)
-        if parent != None:
-            child = callStack.getTop()
-            print "Parent", parent, "\nChild", child
-            #parent.childs.append(child)
-
-
-class CallStack(object):
-    stack = []
-
+class ParentRecord(object):
     def __init__(self):
-        pass
+        self.childs = {}
+
+    def addRecord(self, parent, child):
+        global skip_tags
+        if parent.name not in skip_tags:
+            if parent not in self.child.keys():
+                self.childs[parent.name] = []
+            else:
+                self.childs[parent.name].append(child)
+				
+	def delRecord(self, parent):
+		try:
+			del(self.childs[parent.name])
+		except KeyError:
+			pass
+        
+class CallStack(object):
+    def __init__(self):
+        self.stack = []
 
     def push(self, event):
         self.stack.append(event)
@@ -80,19 +96,18 @@ class CallStack(object):
                 return True
         return False
 
-    def addChild(self, parent, child):
-        for event in reversed(self.stack):
-            if event == parent:
-                event.addChild(child)
+#    def addChild(self, parent, child):
+#        for event in reversed(self.stack):
+#            if event == parent:
+#                event.addChild(child)
 
     def __repr__(self):
         return self.stack.__repr__()
     
 class EventHandler(object):
-    compiler = None
-    
     def __init__(self, compiler):
         self.compiler = compiler
+        self.callStack = self.compiler.callStack
 
     def handle_transfer_start(self, event):
         #print 'Handling transfer'
@@ -106,7 +121,7 @@ class Event(object):
     def __init__(self, name, attrs):
         self.name = name
         self.attrs = attrs
-        self.childs = []
+        #self.childs = []
 
     def __eq__(self, other):
         if self.name == other.name and self.attrs == other.attrs:
@@ -116,18 +131,17 @@ class Event(object):
     def __repr__(self):
         return vars(self).__str__()
  
-    def addChild(self, child):
-        self.childs.append(child)
+#    def addChild(self, child):
+#        self.childs.append(child)
         
 
 class Compiler(object):
-    callStack = None
-    eventHandler = None
-    
     def __init__(self, xmlfile):
+        self.callStack = CallStack()
+        self.parentRecord = ParentRecord()
+
         self.parser = ExpatParser(xmlfile, self)
         self.eventHandler = EventHandler(self)
-        self.callStack = CallStack()
 
     def compile(self):
         self.parser.parse()
@@ -139,4 +153,4 @@ class Compiler(object):
 if __name__ == '__main__':
     inputfile = 'input-compiler/set0.t1x'
     compiler = Compiler(inputfile)
-    compiler.compile()
+    compiler.compile() 
