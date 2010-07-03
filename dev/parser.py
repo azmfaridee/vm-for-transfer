@@ -12,6 +12,7 @@ class ExpatParser(object):
         self.Parser.EndElementHandler = self.handleEndElement
         self.compiler = compiler
         self.callStack = self.compiler.callStack
+        self.parentRecord = self.compiler.parentRecord
 
     def parse(self):
         try:
@@ -30,14 +31,16 @@ class ExpatParser(object):
 
         self.callStack.push(event)
 
-        print 'START', self.callStack
-        print
-
-        #parent = callStack.getTop(2)
+        parent = self.callStack.getTop(2)
         if parent != None and name not in skip_tags:
-            child = callStack.getTop()
-            print "PARENT", parent, "\nCHILD", child
-            #parent.childs.append(child)
+            child = self.callStack.getTop()
+            #print "PARENT", parent, "\nCHILD", child
+            self.parentRecord.addRecord(parent, child)
+
+        #print 'START', self.callStack
+        #print 'START2', self.parentRecord
+        #print
+
         
         handler = self.compiler.eventHandler
         method_name = 'handle_' + name.replace('-', '_') + '_start'
@@ -45,10 +48,14 @@ class ExpatParser(object):
             method = getattr(handler, method_name)
             method(event)
     
-    def handleEndElement(self, name):
-        print 'END',  self.callStack
-        print
-        
+    def handleEndElement(self, name):        
+        record = self.callStack.getTop()
+        self.parentRecord.delRecord(record)
+
+        #print 'END',  self.callStack
+        #print 'END2', self.parentRecord
+        #print
+
         self.callStack.pop()
 
 class ParentRecord(object):
@@ -57,17 +64,21 @@ class ParentRecord(object):
 
     def addRecord(self, parent, child):
         global skip_tags
+
         if parent.name not in skip_tags:
-            if parent not in self.child.keys():
+            if parent.name not in self.childs.keys():
                 self.childs[parent.name] = []
-            else:
-                self.childs[parent.name].append(child)
+            self.childs[parent.name].append(child)
 				
-	def delRecord(self, parent):
-		try:
-			del(self.childs[parent.name])
-		except KeyError:
-			pass
+    def delRecord(self, parent):
+        try:
+            del(self.childs[parent.name])
+        except KeyError:
+            pass
+ 
+    def __repr__(self):
+        return self.childs.__repr__()
+ 
         
 class CallStack(object):
     def __init__(self):
@@ -95,11 +106,6 @@ class CallStack(object):
             if event == findevent:
                 return True
         return False
-
-#    def addChild(self, parent, child):
-#        for event in reversed(self.stack):
-#            if event == parent:
-#                event.addChild(child)
 
     def __repr__(self):
         return self.stack.__repr__()
@@ -131,9 +137,6 @@ class Event(object):
     def __repr__(self):
         return vars(self).__str__()
  
-#    def addChild(self, child):
-#        self.childs.append(child)
-        
 
 class Compiler(object):
     def __init__(self, xmlfile):
@@ -151,6 +154,6 @@ class Compiler(object):
 
 
 if __name__ == '__main__':
-    inputfile = 'input-compiler/set0.t1x'
+    inputfile = 'input-compiler/set1.t1x'
     compiler = Compiler(inputfile)
     compiler.compile() 
