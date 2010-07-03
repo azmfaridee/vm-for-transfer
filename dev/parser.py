@@ -115,18 +115,10 @@ class EventHandler(object):
         self.compiler = compiler
         self.callStack = self.compiler.callStack
 
-    def handle_transfer_start(self, event):
-        #print 'Handling transfer'
-        pass
-
-    def handle_def_cat_start(self, event):
-        #print 'Handlng def-cats'
-        pass
-
     def handle_cat_item_start(self, event):
         def_cat = self.callStack.getTop(2)
         def_cat_id = def_cat.attrs['n']
-        if def_cat_id not in self.compiler.def_cats:
+        if def_cat_id not in self.compiler.def_cats.keys():
             self.compiler.def_cats[def_cat_id] = []
 
         # lemma is OPTIONAL in DTD
@@ -151,7 +143,25 @@ class EventHandler(object):
             regex = regex + '\t'
 
         self.compiler.def_cats[def_cat_id].append(regex)
-        
+
+    def handle_attr_item_start(self, event):
+        def_attr = self.callStack.getTop(2)
+        def_attr_id = def_attr.attrs['n']
+        if def_attr_id not in self.compiler.def_attrs.keys():
+            self.compiler.def_attrs[def_attr_id] = []
+
+        tags = event.attrs['tags'].split('.')
+        regex = ''
+        for tag in tags:
+            regex = regex + '<' + tag + '>'
+
+        self.compiler.def_attrs[def_attr_id].append(regex)
+
+    def handle_def_var_start(self, event):
+        vname = event.attrs['n']
+        value = event.attrs.setdefault('v', '')
+        self.compiler.variables[vname] = value
+
 class Event(object):
     def __init__(self, name, attrs):
         self.name = name
@@ -171,7 +181,10 @@ class Compiler(object):
     def __init__(self, xmlfile):
         self.callStack = CallStack()
         self.parentRecord = ParentRecord()
+
         self.def_cats = {}
+        self.def_attrs = {}
+        self.variables = {}
 
         self.parser = ExpatParser(xmlfile, self)
         self.eventHandler = EventHandler(self)
@@ -187,4 +200,6 @@ if __name__ == '__main__':
     inputfile = 'input-compiler/set1.t1x'
     compiler = Compiler(inputfile)
     compiler.compile()
-    print compiler.def_cats
+    #print compiler.def_cats
+    #print compiler.variables
+    #print compiler.def_attrs
