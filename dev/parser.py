@@ -34,9 +34,9 @@ class ExpatParser(object):
         print
 
         #parent = callStack.getTop(2)
-        #if parent != None and name not in skip_tags:
-        #    child = callStack.getTop()
-        #    print "PARENT", parent, "\nCHILD", child
+        if parent != None and name not in skip_tags:
+            child = callStack.getTop()
+            print "PARENT", parent, "\nCHILD", child
             #parent.childs.append(child)
         
         handler = self.compiler.eventHandler
