@@ -1,4 +1,4 @@
-oimport xml.parsers.expat
+import xml.parsers.expat
 import codecs
 from pprint import pprint
 import sys
@@ -159,9 +159,6 @@ def start_element(name, attrs):
         code = ['push	' + attrs['v']]
         codestack.append([len(stack), 'lit-tag', code])
 
-    if name == 'def-macro':
-        macro_mode = True
-
 def handle_lit_tag(name, attrs):
     code = []
     tag = '<' + attrs['v'] + '>'
@@ -297,16 +294,13 @@ def end_element(name):
                 pass
             elif container == 'var':
                 pass
-
-        if name == 'def-macro':
-            macro_mode = False
  
         # merge code buff into a new code segment
-        code = []
-        for x in code_buff:
-            code.append(x)
+        #code = []
+        #for x in code_buff:
+        #    code.append(x)
         # insert this new code into code_stack
-        codestack.append([depth, name, code])
+        codestack.append([depth, name, code_buff])
         
     if DEBUG_MODE == True and 'def-macro' in zip(*stack)[0]:
         print 'DEBUG OUT: ELEMENT', name, 'CODESTACK', codestack
