@@ -70,6 +70,13 @@ class ExpatParser(object):
             #print 'DATA TO APPEND', [callStackLength, name, codebuffer]
             #print
 
+            handler = self.compiler.eventHandler
+            method_name = 'handle_' + name.replace('-', '_') + '_end'
+            if hasattr(handler, method_name):
+                method = getattr(handler, method_name)
+                method(record, codebuffer)
+
+
             self.compiler.codestack.append([callStackLength, name, codebuffer])
             
         
@@ -140,6 +147,7 @@ class EventHandler(object):
         self.callStack = self.compiler.callStack
         self.codestack = self.compiler.codestack
         self.labels = self.compiler.labels
+        self.macroMode = self.compiler.macroMode
 
     # list of 'starting' event handlers
     def handle_cat_item_start(self, event):
@@ -199,8 +207,8 @@ class EventHandler(object):
 
     def handle_def_macro_start(self, event):
         # FIXME later, the macro mode
-        macro_more = True
-
+        self.macroMode = True
+        
         macro_name = event.attrs['n']
         npar = int(event.attrs['npar'])
         label = 'macro_' + macro_name + '_start'
@@ -221,7 +229,27 @@ class EventHandler(object):
 
     def handle_clip_start(self, event):
         # URGENT FIX
-        code = ['#dummy clip']
+        code = []
+        regex = ''
+        if event.attrs['part'] not in ['lem', 'lemh', 'lemq', 'whole', 'tags']:
+            regex = reduce(lambda x, y: x + '|' + y, self.compiler.def_attrs[event.attrs['part']])
+        else:
+            if event.attrs['part'] == 'lem':
+                regex = 'DUMMY REGEX lem'
+            elif event.attrs['part'] == 'lemh':
+                regex = 'DUMMY REGEX lemh'            
+            elif event.attrs['part'] == 'lemq':
+                regex = 'DUMMY REGEX lemq'            
+            elif event.attrs['part'] == 'whole':
+                regex = 'DUMMY REGEX whole'            
+            elif event.attrs['part'] == 'tags ':
+                regex = 'DUMMY REGEX tags'
+
+        # push pos
+        code.append('push\t' + event.attrs['pos'])
+        # push regex
+        code.append('push\t' + regex)
+        
         self.codestack.append([self.callStack.getLength(), 'clip', code])
 
     def handle_lit_tag_start(self, event):
@@ -230,14 +258,69 @@ class EventHandler(object):
         self.codestack.append([self.callStack.getLength(), 'lit-tag', code])
 
     def handle_lit_start(self, event):
+        # FIXME: fix the problem with empty lit e.g. <lit v=""/>
+        # print 'DEBUG push', event.attrs['v'].encode('utf-8')
         code = ['push	' + event.attrs['v']]
         self.codestack.append([self.callStack.getLength(), 'lit-tag', code])
         
 
     # list of 'ending' event handlers
-    def handle_and_end(self, event):
-        #print event
+    def handle_and_end(self, event, codebuffer):
+        codebuffer.append('#dummy and')
+
+    def handle_or_end(self, event, codebuffer):
+        codebuffer.append('#dummy or')
+
+    def handle_not_end(self, event, codebuffer):
+        codebuffer.append('#dummy not')
+
+    def handle_equal_end(self, event, codebuffer):
+        try:
+            if event.attrs['caseless'] == 'yes':
+                codebuffer.append(u'cmpi')
+        except KeyError:
+            codebuffer.append(u'cmp')
+        
+    def handle_begings_with_end(self, event, codebuffer):
+        #codebuffer.append('#dummy begins-with')
         pass
+
+    def handle_ends_with_end(self, event, codebuffer):
+        #codebuffer.append('#dummy ends-with')
+        pass
+
+    def handle_contains_substring_end(self, event, codebuffer):
+        #codebuffer.append('#dummy contains_substring')
+        pass
+
+    def handle_in_end(self, event, codebuffer):
+        pass
+
+    def handle_def_macro_end(self, event, codebuffer):
+        label = u'macro_' + event.attrs['n'] + u'_end'
+        codebuffer.append(label + '	:ret')
+        self.labels.append(label)
+        self.macroMode = False
+
+    def handle_choose_end(self, event, codebuffer):
+        pass
+
+    def handle_when_end(self, event, codebuffer):
+        label = u'when_' + str(self.compiler.whenid) + u'_end'
+        self.labels.append(label)
+        code = [label + ':	nop']
+        codebuffer.append(label + '	:ret')
+        
+        self.compiler.whenid += 1
+
+    def handle_test_end(self, event, codebuffer):
+        # FIXME: this will probably not work in case of nested 'when' and 'otehrwise'
+        # need to find something more mature
+        codebuffer.append(u'jnz	when' + str(self.compiler.whenid) + '_end')
+
+    def handle_let_end(self, event, codebuffer):
+        pass
+
     
 class Event(object):
     def __init__(self, name, attrs):
@@ -255,10 +338,12 @@ class Event(object):
  
 
 class Compiler(object):
+    """
+    This is actually a container class that abstracts the underlying logic
+    for the compilation process
+    """
     def __init__(self, xmlfile):
-        self.callStack = CallStack()
-        self.parentRecord = ParentRecord()
-
+        # various lists
         self.def_cats = {}
         self.def_attrs = {}
         self.variables = {}
@@ -267,9 +352,18 @@ class Compiler(object):
         self.labels = []
         self.codestack = []
 
+        # id variables use for labeling, these need to be incremented
         self.whenid = 1
         self.chooseid = 1
+
+        # state variables
+        self.macroMode = False
         
+        # data structures
+        self.callStack = CallStack()
+        self.parentRecord = ParentRecord()
+
+        # create the parse and the handler
         self.parser = ExpatParser(xmlfile, self)
         self.eventHandler = EventHandler(self)
 
@@ -279,6 +373,14 @@ class Compiler(object):
     def optimize(self):
         pass
 
+    def printCode(self):
+        if len(self.codestack) == 1:
+            for line in self.codestack[0][2]:
+                print line.encode('utf-8')
+
+    def printLabels(self):
+        for label in self.labels:
+            print label
 
 if __name__ == '__main__':
     inputfile = 'input-compiler/set1.t1x'
@@ -288,4 +390,5 @@ if __name__ == '__main__':
     #print compiler.variables
     #print compiler.def_attrs
     #print compiler.def_lists
-    print compiler.codestack
+    compiler.printCode()
+    #compiler.printLabels()
