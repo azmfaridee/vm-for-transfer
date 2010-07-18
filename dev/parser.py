@@ -1,9 +1,11 @@
 import xml.parsers.expat, sys, codecs
+from pprint import pprint
 
 skip_tags = ['cat-item', 'def-cat', 'section-def-cats', 'attr-item', 'def-attr', 'section-def-attrs', 'def-var', 'list-item', 'def-list', 'section-def-vars', 'section-def-lists']
 
 leaf_tags = ['clip', 'lit', 'lit-tag', 'with-param', 'var',  'b', 'list', 'pattern-item']
 
+DEBUG_MODE = True
 
 class ExpatParser(object):
     def __init__(self, fileName, compiler):
@@ -25,6 +27,7 @@ class ExpatParser(object):
             print "FATAL ERROR: Cannot open the transfer file specified!"
             sys.exit(0)
 
+    # kept for furture use only
     def handleCharData(self, data): pass
     
     def handleStartElement(self, name, attrs):
@@ -52,7 +55,6 @@ class ExpatParser(object):
     
     def handleEndElement(self, name):        
         record = self.callStack.getTop()
-        self.parentRecord.delRecord(record)
 
         if record.name not in skip_tags and record.name not in leaf_tags:
             #print 'CODESTACK before POP', self.compiler.codestack
@@ -84,6 +86,7 @@ class ExpatParser(object):
         #print 'END2', self.parentRecord
         #print
 
+        self.parentRecord.delRecord(record)
         self.callStack.pop()
 
 class ParentRecord(object):
@@ -103,6 +106,13 @@ class ParentRecord(object):
             del(self.childs[parent.name])
         except KeyError:
             pass
+
+    def getChilds(self, parent):
+        try:
+            childs = self.childs[parent.name]
+        except KeyError:
+            childs = None
+        return childs
  
     def __repr__(self):
         return self.childs.__repr__()
@@ -132,9 +142,15 @@ class CallStack(object):
     def getLength(self):
         return len(self.stack)
 
-    def find(self, findevent):
+    def hasEvent(self, findevent):
         for event in reversed(self.stack):
             if event == findevent:
+                return True
+        return False
+
+    def hasEventNamed(self, name):
+        for event in reversed(self.stack):
+            if event.name == name:
                 return True
         return False
 
@@ -148,7 +164,7 @@ class EventHandler(object):
         self.codestack = self.compiler.codestack
         self.labels = self.compiler.labels
         self.macroMode = self.compiler.macroMode
-
+        
     # list of 'starting' event handlers
     def handle_cat_item_start(self, event):
         def_cat = self.callStack.getTop(2)
@@ -227,9 +243,17 @@ class EventHandler(object):
         code = [label + ':	nop']
         self.codestack.append([self.callStack.getLength(), 'when', code])
 
-    def handle_clip_start(self, event):
+    def __get_xml_tag(self, event):
+        tag = '<' + event.name
+        for attr in event.attrs.keys():
+            tag +=  ' ' + attr + '="' + event.attrs[attr] + '"'
+        tag += '/>'
+        return tag
+
+    def __get_clip_basic_code(self, event):
         code = []
         regex = ''
+        
         if event.attrs['part'] not in ['lem', 'lemh', 'lemq', 'whole', 'tags']:
             # does optimization help? need to check that
             regex = reduce(lambda x, y: x + '|' + y, self.compiler.def_attrs[event.attrs['part']])
@@ -246,23 +270,55 @@ class EventHandler(object):
             elif event.attrs['part'] == 'tags ':
                 regex = 'DUMMY REGEX tags'
 
+        if DEBUG_MODE:
+            code.append('### DEBUG: ' + self.__get_xml_tag(event))
         # push pos
         code.append('push\t' + event.attrs['pos'])
         # push regex
         code.append('push\t' + regex)
+        # cliptl or clipsl
+        if event.attrs['side'] == 'sl': code.append(u'clipsl')
+        elif event.attrs['side'] == 'tl': code.append(u'cliptl')        
+
+        return code
+    
+    def handle_clip_start(self, event):
+    #def handle_clip_start(self, event, internal_call = False, called_by = None):
+        
+        # if clip is any of these special tags, clip needs special handling
+        delayed_tags = ['let', 'modify-case']
+        
+        if True in map(self.compiler.callStack.hasEventNamed, delayed_tags):
+            # silently return, when inside delayed tags
+            return
+
+        code = self.__get_clip_basic_code(event)
+
+        # code for lvalue or rvalue calculation (i.e. 'clip' mode or 'store' mode)
+        #parent =  self.compiler.callStack.getTop(2)
+        # NOTE: siblings also include the curret tag
+        #siblings =  self.compiler.parentRecord.getChilds(parent)        
         
         self.codestack.append([self.callStack.getLength(), 'clip', code])
 
     def handle_lit_tag_start(self, event):
-        code = ['push\t' + '<' + event.attrs['v'] + '>']
+        code = []
+        if DEBUG_MODE:
+            code.append('### DEBUG: ' + self.__get_xml_tag(event))
+        code.append('push\t' + '<' + event.attrs['v'] + '>')
         self.codestack.append([self.callStack.getLength(), 'lit-tag', code])
 
     def handle_lit_start(self, event):
         # FIXME: fix the problem with empty lit e.g. <lit v=""/>
         # print 'DEBUG push', event.attrs['v'].encode('utf-8')
-        code = ['push	' + event.attrs['v']]
+        code = []
+        if DEBUG_MODE:
+            code.append('### DEBUG: ' + self.__get_xml_tag(event))        
+        code.append('push	' + event.attrs['v'])
         self.codestack.append([self.callStack.getLength(), 'lit-tag', code])
         
+
+
 
     # list of 'ending' event handlers
     def handle_and_end(self, event, codebuffer):
@@ -308,8 +364,7 @@ class EventHandler(object):
     def handle_when_end(self, event, codebuffer):
         label = u'when_' + str(self.compiler.whenid) + u'_end'
         self.labels.append(label)
-        code = [label + ':	nop']
-        codebuffer.append(label + '	:ret')
+        codebuffer.append(label + ':\tnop')
         
         self.compiler.whenid += 1
 
@@ -318,9 +373,16 @@ class EventHandler(object):
         # need to find something more mature
         codebuffer.append(u'jnz	when' + str(self.compiler.whenid) + '_end')
 
-    def handle_let_end(self, event, codebuffer):
-        pass
 
+    # the followings are delayed mode tags
+    def handle_let_end(self, event, codebuffer):
+        child1, child2 = self.compiler.parentRecord.getChilds(event)
+        #print child1, child2
+
+    def handle_modify_case_end(self, event, codebuffer):
+        child1, child2 = self.compiler.parentRecord.getChilds(event)
+        ## print child1
+        ## print child2
     
 class Event(object):
     def __init__(self, name, attrs):
