@@ -228,12 +228,13 @@ class EventHandler(object):
         self.codestack.append([self.callStack.getLength(), 'when', code])
 
     def handle_clip_start(self, event):
-        # URGENT FIX
         code = []
         regex = ''
         if event.attrs['part'] not in ['lem', 'lemh', 'lemq', 'whole', 'tags']:
+            # does optimization help? need to check that
             regex = reduce(lambda x, y: x + '|' + y, self.compiler.def_attrs[event.attrs['part']])
         else:
+            # FIXME: need to define special regex for these parts
             if event.attrs['part'] == 'lem':
                 regex = 'DUMMY REGEX lem'
             elif event.attrs['part'] == 'lemh':
@@ -253,8 +254,7 @@ class EventHandler(object):
         self.codestack.append([self.callStack.getLength(), 'clip', code])
 
     def handle_lit_tag_start(self, event):
-        # URGENT FIX
-        code = ['#dummy lit-tag']
+        code = ['push\t' + '<' + event.attrs['v'] + '>']
         self.codestack.append([self.callStack.getLength(), 'lit-tag', code])
 
     def handle_lit_start(self, event):
