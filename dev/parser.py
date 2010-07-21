@@ -19,7 +19,7 @@ class ExpatParser(object):
         self.Parser.EndElementHandler = self.handleEndElement
         self.compiler = compiler
         self.callStack = self.compiler.callStack
-        self.parentRecord = self.compiler.parentRecord
+        ## self.parentRecord = self.compiler.parentRecord
 
     def parse(self):
         try:
@@ -39,15 +39,18 @@ class ExpatParser(object):
 
         self.callStack.push(event)
 
-        parent = self.callStack.getTop(2)
-        if parent != None and name not in skip_tags:
-            #child = self.callStack.getTop()
-            #print "PARENT", parent, "\nCHILD", child
-            self.parentRecord.addRecord(parent, event)
+        ## parent = self.callStack.getTop(2)
+        ## if parent != None and name not in skip_tags:
+        ##     #child = self.callStack.getTop()
+        ##     #print "PARENT", parent, "\nCHILD", child
+        ##     self.parentRecord.addRecord(parent, event)
 
         #print 'START', self.callStack
         #print 'START2', self.parentRecord
         #print
+
+        # EXPERIMENTAL
+        self.compiler.symbolTable.addSymbol(event)
 
         
         handler = self.compiler.eventHandler
@@ -57,9 +60,9 @@ class ExpatParser(object):
             method(event)
     
     def handleEndElement(self, name):        
-        record = self.callStack.getTop()
+        event = self.callStack.getTop()
 
-        if record.name not in skip_tags and record.name not in leaf_tags:
+        if event.name not in skip_tags and event.name not in leaf_tags:
             #print 'CODESTACK before POP', self.compiler.codestack
             
             callStackLength = self.callStack.getLength()
@@ -70,16 +73,17 @@ class ExpatParser(object):
                     codebuffer.insert(0, statement)
                 self.compiler.codestack.pop(-1)
 
-            #print codebuffer
-            #print 'CODESTACK after POP', self.compiler.codestack
-            #print 'DATA TO APPEND', [callStackLength, name, codebuffer]
-            #print
+            ## print event
+            ## print codebuffer
+            ## print 'CODESTACK after POP', self.compiler.codestack
+            ## print 'DATA TO APPEND', [callStackLength, name, codebuffer]
+            ## print
 
             handler = self.compiler.eventHandler
             method_name = 'handle_' + name.replace('-', '_') + '_end'
             if hasattr(handler, method_name):
                 method = getattr(handler, method_name)
-                method(record, codebuffer)
+                method(event, codebuffer)
 
 
             self.compiler.codestack.append([callStackLength, name, codebuffer])
@@ -89,7 +93,7 @@ class ExpatParser(object):
         #print 'END2', self.parentRecord
         #print
 
-        self.parentRecord.delRecord(record)
+        ## self.parentRecord.delRecord(event)
         self.callStack.pop()
 
 class ParentRecord(object):
@@ -236,9 +240,11 @@ class EventHandler(object):
         code = [label + ':	nop']
         self.codestack.append([self.callStack.getLength(), 'def-macro', code])
 
+    # WORKING
     def handle_choose_start(self, event):
-        #a = self.compiler.parentRecord.getChilds(event)
-        #print a
+        ## print event
+        ## a = self.compiler.symbolTable.getChilds(event)
+        ## print a
         pass
         
     def handle_when_start(self, event):
@@ -251,7 +257,8 @@ class EventHandler(object):
         self.codestack.append([self.callStack.getLength(), 'when', code])
 
     def handle_otherwise_start(self, event):
-        label = u'otherwise_' + str(self.compiler.otherwiseid) + u'_start'
+        self.compiler.otherwiseStack.append(self.compiler.otherwiseid)
+        label = u'otherwise_' + str(self.compiler.otherwiseStack[-1]) + u'_start'
         self.labels.append(label)
         code = [label + ':	nop']
         self.codestack.append([self.callStack.getLength(), 'otherwise', code])
@@ -286,9 +293,9 @@ class EventHandler(object):
         if DEBUG_MODE:
             code.append('### DEBUG: ' + self.__get_xml_tag(event))
         # push pos
-        code.append('push\t' + event.attrs['pos'])
+        code.append(u'push\t' + event.attrs['pos'])
         # push regex
-        code.append('push\t' + regex)
+        code.append(u'push\t' + regex)
 
         return code
 
@@ -332,8 +339,8 @@ class EventHandler(object):
     def __get_lit_tag_basic_code(self, event):
         code = []
         if DEBUG_MODE:
-            code.append('### DEBUG: ' + self.__get_xml_tag(event))
-        code.append('push\t' + '<' + event.attrs['v'] + '>')        
+            code.append(u'### DEBUG: ' + self.__get_xml_tag(event))
+        code.append(u'push\t' + '<' + event.attrs['v'] + '>')        
         return code
 
     def handle_lit_tag_start(self, event):
@@ -351,8 +358,8 @@ class EventHandler(object):
         # print 'DEBUG push', event.attrs['v'].encode('utf-8')
         code = []
         if DEBUG_MODE:
-            code.append('### DEBUG: ' + self.__get_xml_tag(event))        
-        code.append('push\t' + event.attrs['v'])
+            code.append(u'### DEBUG: ' + self.__get_xml_tag(event))        
+        code.append(u'push\t' + event.attrs['v'])
         return code
     
     def handle_lit_start(self, event):
@@ -368,8 +375,8 @@ class EventHandler(object):
     def __get_var_basic_code(self, event):
         code = []
         if DEBUG_MODE:
-            code.append('### DEBUG: ' + self.__get_xml_tag(event))                
-        code.append('pushv\t' + event.attrs['n'])
+            code.append(u'### DEBUG: ' + self.__get_xml_tag(event))                
+        code.append(u'pushv\t' + event.attrs['n'])
         return code
     
     def handle_var_start(self, event):
@@ -382,20 +389,20 @@ class EventHandler(object):
         self.compiler.APPEND_MODE = True
         code = []
         if DEBUG_MODE:
-            code.append('### DEBUG: ' + self.__get_xml_tag(event))
-        code.append('push\t' +  event.attrs['n'])
+            code.append(u'### DEBUG: ' + self.__get_xml_tag(event))
+        code.append(u'push\t' +  event.attrs['n'])
         self.codestack.append([self.callStack.getLength(), 'append', code])
     
 
     # list of 'ending' event handlers
     def handle_and_end(self, event, codebuffer):
-        codebuffer.append('and')
+        codebuffer.append(u'and')
 
     def handle_or_end(self, event, codebuffer):
-        codebuffer.append('or')
+        codebuffer.append(u'or')
 
     def handle_not_end(self, event, codebuffer):
-        codebuffer.append('not')
+        codebuffer.append(u'not')
 
     def handle_equal_end(self, event, codebuffer):
         try:
@@ -426,13 +433,40 @@ class EventHandler(object):
         self.macroMode = False
 
     def handle_choose_end(self, event, codebuffer):
-        pass
+        childs = self.compiler.symbolTable.getChilds(event)
+        ## pprint(childs)
+        ## pprint(codebuffer)
+        ## print
 
+        has_otherwise = False
+        for child in reversed(childs):
+            if child.name == 'otherwise':
+                has_otherwise = True
+                break
+        
+        # reversing does not take much CPU time, so this is the preferred method over
+        # iterating in reverse
+        if has_otherwise:
+            codebuffer.reverse()
+            for index, line in enumerate(codebuffer):
+                if line.startswith('#!#jmp\t'):
+                    codebuffer[index] = line.replace('#!#jmp\t', 'jmp\t')
+                    break
+            codebuffer.reverse()
+        
+        
     def handle_when_end(self, event, codebuffer):
+        code = []
+        
         local_whenid = self.compiler.whenStack[-1]
-        label = u'when_' + str(local_whenid) + u'_end'
-        self.labels.append(label)
-        codebuffer.append(label + ':\tnop')
+        otherwise_end_label = u'otherwise_' + str(local_whenid)  + u'_end'
+        when_end_label = u'when_' + str(local_whenid) + u'_end'
+        
+        self.labels.append(when_end_label)
+
+        code.append('#!#jmp\t' + otherwise_end_label)
+        code.append(when_end_label + ':\tnop')
+        codebuffer.extend(code)
         
         #self.compiler.whenid += 1
 
@@ -442,10 +476,12 @@ class EventHandler(object):
         self.compiler.whenStack.pop()
 
     def handle_otherwise_end(self, event, codebuffer):
-        label = u'otherwise_' + str(self.compiler.otherwiseid) + u'_end'
+        label = u'otherwise_' + str(self.compiler.otherwiseStack[-1]) + u'_end'
+        
         self.labels.append(label)
         codebuffer.append(label + ':\tnop')
         
+        self.compiler.otherwiseStack.pop()
 
     def handle_test_end(self, event, codebuffer):
         # FIXME: this will probably not work in case of nested 'when' and 'otehrwise'
@@ -455,7 +491,9 @@ class EventHandler(object):
 
     # the followings are delayed mode tags
     def handle_let_end(self, event, codebuffer):
-        child1, child2 = self.compiler.parentRecord.getChilds(event)
+        #child1, child2 = self.compiler.parentRecord.getChilds(event)
+        # EXPERIMENTAL
+        child1, child2 =  self.compiler.symbolTable.getChilds(event)
         code = []
         if child1.name == 'clip':
             code = self.__get_clip_tag_basic_code(child1)
@@ -489,20 +527,21 @@ class EventHandler(object):
                 code.extend(self.__get_var_basic_code(child2))
 
             # now the extra instuction for the assignment
-            code.append('storev')
+            code.append(u'storev')
             
 
         codebuffer.extend(code)
 
     def handle_modify_case_end(self, event, codebuffer):
-        child1, child2 = self.compiler.parentRecord.getChilds(event)
+        ## child1, child2 = self.compiler.parentRecord.getChilds(event)
         code = []
         ## print child1
         ## print child2
 
     def handle_append_end(self, event, codebuffer):
-        codebuffer.append('push\t' + str(self.compiler.appendModeArgs))
-        codebuffer.append('appendv')
+        
+        codebuffer.append(u'push\t' + str(self.compiler.appendModeArgs))
+        codebuffer.append(u'appendv')
 
         # reset the state variables regarding append mode
         self.compiler.appendModeArgs = 0
@@ -511,21 +550,73 @@ class EventHandler(object):
     def __check_for_append_mode(self):
         if self.compiler.APPEND_MODE == True:
             self.compiler.appendModeArgs += 1
+
+    def handle_concat_end(self, event, codebuffer):
+        pass
     
 class Event(object):
     def __init__(self, name, attrs):
         self.name = name
         self.attrs = attrs
-        #self.childs = []
 
     def __eq__(self, other):
+        if other == None:
+            return False
         if self.name == other.name and self.attrs == other.attrs:
             return True
         return False
 
     def __repr__(self):
         return vars(self).__str__()
- 
+
+    def __genid(self):
+        pass
+
+class SymbolTable(object):
+    def __init__(self, callStack):
+        self.symbolList = {}
+        self.childList = {}
+
+        self.currentSymbolId = 0
+
+        self.callStack = callStack
+
+    def addSymbol(self, event):
+        # symbol id starts from 1
+        self.currentSymbolId += 1        
+        self.symbolList[self.currentSymbolId] = event
+
+        currentParentId = -1
+        try: currentParent = self.callStack.getTop(2)
+        except: currentParent = None
+        currentParentId = self.__getId(currentParent)
+
+        if currentParentId not in self.childList.keys():
+            self.childList[currentParentId] = []
+        self.childList[currentParentId].append(self.currentSymbolId)
+
+    def __getId(self, event):
+        eventId = -1
+        # this is only for safety, most of the time eventId would be
+        # equal to currentSymbolId
+        for i in range(self.currentSymbolId, 0, -1):
+            if self.symbolList[i] == event:
+                return i
+        return eventId
+            
+
+    def getChilds(self, event):
+        eventId = self.__getId(event)
+        ## print event
+        ## print eventId
+        ## pprint(self.childList)
+        ## pprint(self.symbolList)
+        ## print self.symbolList[719]
+        childs = []
+        for childId in self.childList[eventId]:
+            childs.append(self.symbolList[childId])
+        return childs
+        
 
 class Compiler(object):
     """
@@ -556,39 +647,67 @@ class Compiler(object):
         self.NESTED_WHEN_MODE = False
         
         # data structures
+        # whenstack is used for nested when call
+        self.whenStack = []
+        self.otherwiseStack = []
+        
         # callStack holds the call history
         self.callStack = CallStack()
         # parentRecord holds the child parent relationship
-        self.parentRecord = ParentRecord()
-        # whenstack is used for nested when call
-        self.whenStack = []
+        ## self.parentRecord = ParentRecord()
+        self.symbolTable = SymbolTable(self.callStack)
 
         # create the parse and the handler
         self.parser = ExpatParser(xmlfile, self)
         self.eventHandler = EventHandler(self)
 
+        self.processedCode = []
+
     def compile(self):
         self.parser.parse()
 
     def optimize(self):
-        pass
-
-    def printCode(self):
         if len(self.codestack) == 1:
             for line in self.codestack[0][2]:
-                print line.encode('utf-8')
+                line = line.encode('utf-8')
 
+                # optimization 1: remove placeholder instructions (#!#)
+                ## if line.startswith('#!#'):
+                ##     continue
+                
+                self.processedCode.append(line)
+        else:
+            raise CompilerException("FATAL ERROR: Cannot optimize code, the code did not compile correctly!")
+
+        
+    def printCode(self):
+        for line in self.processedCode:
+            print line
+            
     def printLabels(self):
         for label in self.labels:
             print label
 
+class CompilerException(Exception):
+    pass
+
 if __name__ == '__main__':
     inputfile = 'input-compiler/set1.t1x'
-    compiler = Compiler(inputfile)
-    compiler.compile()
-    #print compiler.def_cats
-    #print compiler.variables
-    #print compiler.def_attrs
-    #print compiler.def_lists
-    compiler.printCode()
-    #compiler.printLabels()
+    #inputfile = 'apertium-en-ca.en-ca.t1x'
+
+    try:
+        compiler = Compiler(inputfile)
+        compiler.compile()
+        compiler.optimize()
+        #print compiler.def_cats
+        #print compiler.variables
+        #print compiler.def_attrs
+        #print compiler.def_lists
+        compiler.printCode()
+        #compiler.printLabels()
+
+        #print compiler.symbolTable.symbolList
+        #pprint(compiler.symbolTable.childList)
+    except CompilerException, ex:
+        print ex
+
