@@ -166,7 +166,6 @@ class EventHandler(object):
         self.callStack = self.compiler.callStack
         self.codestack = self.compiler.codestack
         self.labels = self.compiler.labels
-        self.macroMode = self.compiler.macroMode
         
     # list of 'starting' event handlers
     def handle_cat_item_start(self, event):
@@ -241,7 +240,10 @@ class EventHandler(object):
         pass
 
     def handle_when_start(self, event):
-        label = u'when_' + str(self.compiler.whenid) + u'_start'
+        self.compiler.whenid += 1
+        self.compiler.whenStack.append(self.compiler.whenid)
+        
+        label = u'when_' + str(self.compiler.whenStack[-1]) + u'_start'
         self.labels.append(label)
         code = [label + ':	nop']
         self.codestack.append([self.callStack.getLength(), 'when', code])
@@ -371,7 +373,8 @@ class EventHandler(object):
     def handle_append_start(self, event):
         self.compiler.APPEND_MODE = True
         code = []
-        code.append('### DEBUG: ' + self.__get_xml_tag(event))
+        if DEBUG_MODE:
+            code.append('### DEBUG: ' + self.__get_xml_tag(event))
         code.append('push\t' +  event.attrs['n'])
         self.codestack.append([self.callStack.getLength(), 'append', code])
     
@@ -418,16 +421,17 @@ class EventHandler(object):
         pass
 
     def handle_when_end(self, event, codebuffer):
-        label = u'when_' + str(self.compiler.whenid) + u'_end'
+        label = u'when_' + str(self.compiler.whenStack[-1]) + u'_end'
         self.labels.append(label)
         codebuffer.append(label + ':\tnop')
         
-        self.compiler.whenid += 1
+        #self.compiler.whenid += 1
+        self.compiler.whenStack.pop()
 
     def handle_test_end(self, event, codebuffer):
         # FIXME: this will probably not work in case of nested 'when' and 'otehrwise'
         # need to find something more mature
-        codebuffer.append(u'jnz	when' + str(self.compiler.whenid) + '_end')
+        codebuffer.append(u'jnz	when_' + str(self.compiler.whenStack[-1]) + '_end')
 
 
     # the followings are delayed mode tags
@@ -442,6 +446,7 @@ class EventHandler(object):
                 code.extend(self.__get_lit_basic_code(child2))
             elif child2.name == 'var':
                 code.extend(self.__get_var_basic_code(child2))
+
             # storetl or storesl
             code.extend(self.__get_clip_tag_lvalue_code(child1))
 
@@ -452,8 +457,14 @@ class EventHandler(object):
                 code.extend(self.__get_clip_tag_basic_code(child2))
                 # normal rvalue cliptl or clipsl for 'clip'
                 code.extend(self.__get_clip_tag_rvalue_code(child2))
-                # now the extra instuction for the assignment
-                code.append('storev')
+            elif child2.name == 'lit-tag':
+                code.extend(self.__get_lit_tag_basic_code(child2))
+            elif child2.name == 'lit':
+                code.extend(self.__get_lit_basic_code(child2))
+
+            # now the extra instuction for the assignment
+            code.append('storev')
+            
 
         codebuffer.extend(code)
 
@@ -507,17 +518,22 @@ class Compiler(object):
 
         # id variables use for labeling, these need to be incremented
         self.whenid = 1
-        self.chooseid = 1
 
         # state variables
-        self.macroMode = False
-
+        self.MACRO_MODE = False
+        
         self.APPEND_MODE = False
         self.appendModeArgs = 0
+
+        self.NESTED_WHEN_MODE = False
         
         # data structures
+        # callStack holds the call history
         self.callStack = CallStack()
+        # parentRecord holds the child parent relationship
         self.parentRecord = ParentRecord()
+        # whenstack is used for nested when call
+        self.whenStack = []
 
         # create the parse and the handler
         self.parser = ExpatParser(xmlfile, self)
