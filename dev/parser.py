@@ -63,11 +63,11 @@ class ExpatParser(object):
         event = self.callStack.getTop()
 
         if event.name not in skip_tags and event.name not in leaf_tags:
-            #print 'CODESTACK before POP', self.compiler.codestack
+            ## print 'CODESTACK before POP', self.compiler.codestack
             
             callStackLength = self.callStack.getLength()
             codebuffer = []
-
+                
             while len(self.compiler.codestack) > 0 and self.compiler.codestack[-1][0] > callStackLength:
                 for statement in reversed(self.compiler.codestack[-1][2]):
                     codebuffer.insert(0, statement)
