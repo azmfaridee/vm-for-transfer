@@ -1,80 +1,18 @@
+#!/usr/bin/python
+# coding=utf-8
+# -*- encoding: utf-8 -*-
+
 from pprint import pprint
 from expatparser import ExpatParser
+from parentrecord import ParentRecord
+from callstack import CallStack
 
 # clip, lit-tag need special handling if inside of any of these tags
 delayed_tags = ['let', 'modify-case']
 
-DEBUG_MODE = True
-
-
-class ParentRecord(object):
-    def __init__(self):
-        self.childs = {}
-
-    def addRecord(self, parent, child):
-        global skip_tags
-
-        if parent.name not in skip_tags:
-            if parent.name not in self.childs.keys():
-                self.childs[parent.name] = []
-            self.childs[parent.name].append(child)
-				
-    def delRecord(self, parent):
-        try:
-            del(self.childs[parent.name])
-        except KeyError:
-            pass
-
-    def getChilds(self, parent):
-        try:
-            childs = self.childs[parent.name]
-        except KeyError:
-            childs = None
-        return childs
- 
-    def __repr__(self):
-        return self.childs.__repr__()
+DEBUG_MODE = False
  
         
-class CallStack(object):
-    def __init__(self):
-        self.stack = []
-
-    def push(self, event):
-        self.stack.append(event)
-
-    def getTop(self, index = 1):
-        try:
-            topdata = self.stack[-index]
-        except IndexError:
-            print >> sys.stderr, 'WARNING: Out of index access in stack'
-            topdata = None
-        return topdata
-
-    def pop(self):
-        try:
-            self.stack.pop()
-        except IndexError:
-            print >> sys.stderr, 'WARNING: Out of index access in stack'
-
-    def getLength(self):
-        return len(self.stack)
-
-    def hasEvent(self, findevent):
-        for event in reversed(self.stack):
-            if event == findevent:
-                return True
-        return False
-
-    def hasEventNamed(self, name):
-        for event in reversed(self.stack):
-            if event.name == name:
-                return True
-        return False
-
-    def __repr__(self):
-        return self.stack.__repr__()
-
 class EventHandler(object):
     def __init__(self, compiler):
         self.compiler = compiler
@@ -202,7 +140,7 @@ class EventHandler(object):
                 regex = '\\t'
 
         if DEBUG_MODE:
-            code.append('### DEBUG: ' + self.__get_xml_tag(event))
+            code.append(u'### DEBUG: ' + self.__get_xml_tag(event))
         # push pos
         code.append(u'push\t' + event.attrs['pos'])
         # push regex
