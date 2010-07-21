@@ -8,7 +8,7 @@ leaf_tags = ['clip', 'lit', 'lit-tag', 'with-param', 'var',  'b', 'list', 'patte
 # clip, lit-tag need special handling if inside of any of these tags
 delayed_tags = ['let', 'modify-case']
 
-DEBUG_MODE = True
+DEBUG_MODE = False
 
 class ExpatParser(object):
     def __init__(self, fileName, compiler):
@@ -48,6 +48,9 @@ class ExpatParser(object):
         #print 'START', self.callStack
         #print 'START2', self.parentRecord
         #print
+
+        # EXPERIMENTAL
+        self.compiler.symbolTable.addSymbol(event)
 
         
         handler = self.compiler.eventHandler
@@ -251,7 +254,8 @@ class EventHandler(object):
         self.codestack.append([self.callStack.getLength(), 'when', code])
 
     def handle_otherwise_start(self, event):
-        label = u'otherwise_' + str(self.compiler.otherwiseid) + u'_start'
+        self.compiler.otherwiseStack.append(self.compiler.otherwiseid)
+        label = u'otherwise_' + str(self.compiler.otherwiseStack[-1]) + u'_start'
         self.labels.append(label)
         code = [label + ':	nop']
         self.codestack.append([self.callStack.getLength(), 'otherwise', code])
@@ -442,10 +446,11 @@ class EventHandler(object):
         self.compiler.whenStack.pop()
 
     def handle_otherwise_end(self, event, codebuffer):
-        label = u'otherwise_' + str(self.compiler.otherwiseid) + u'_end'
+        label = u'otherwise_' + str(self.compiler.otherwiseStack[-1]) + u'_end'
         self.labels.append(label)
         codebuffer.append(label + ':\tnop')
         
+        self.compiler.otherwiseStack.pop()
 
     def handle_test_end(self, event, codebuffer):
         # FIXME: this will probably not work in case of nested 'when' and 'otehrwise'
@@ -516,16 +521,49 @@ class Event(object):
     def __init__(self, name, attrs):
         self.name = name
         self.attrs = attrs
-        #self.childs = []
 
     def __eq__(self, other):
+        if other == None:
+            return False
         if self.name == other.name and self.attrs == other.attrs:
             return True
         return False
 
     def __repr__(self):
         return vars(self).__str__()
- 
+
+    def __genid(self):
+        pass
+
+class SymbolTable(object):
+    def __init__(self, callStack):
+        self.symbolList = {}
+        self.childList = {}
+        
+        self.currentSymbolId = 0
+
+        self.callStack = callStack
+
+    def addSymbol(self, event):        
+        self.symbolList[self.currentSymbolId] = event
+
+        currentParentId = -1
+        try:
+            currentParent = self.callStack.getTop(2)
+        except:
+            currentParent = None
+        for i in range(self.currentSymbolId, -1, -1):
+            if self.symbolList[i] == currentParent:
+                currentParentId = i
+                break
+
+        if currentParentId not in self.childList.keys():
+            self.childList[currentParentId] = []
+        self.childList[currentParentId].append(self.currentSymbolId)
+
+        # this is the last thing to do
+        self.currentSymbolId += 1
+        
 
 class Compiler(object):
     """
@@ -556,12 +594,15 @@ class Compiler(object):
         self.NESTED_WHEN_MODE = False
         
         # data structures
+        # whenstack is used for nested when call
+        self.whenStack = []
+        self.otherwiseStack = []
+        
         # callStack holds the call history
         self.callStack = CallStack()
         # parentRecord holds the child parent relationship
         self.parentRecord = ParentRecord()
-        # whenstack is used for nested when call
-        self.whenStack = []
+        self.symbolTable = SymbolTable(self.callStack)
 
         # create the parse and the handler
         self.parser = ExpatParser(xmlfile, self)
@@ -584,11 +625,16 @@ class Compiler(object):
 
 if __name__ == '__main__':
     inputfile = 'input-compiler/set1.t1x'
+    #inputfile = 'apertium-en-ca.en-ca.t1x'
     compiler = Compiler(inputfile)
     compiler.compile()
     #print compiler.def_cats
     #print compiler.variables
     #print compiler.def_attrs
     #print compiler.def_lists
-    compiler.printCode()
+    #compiler.printCode()
     #compiler.printLabels()
+
+    #print compiler.symbolTable.symbolList
+    #pprint(compiler.symbolTable.childList)
+
