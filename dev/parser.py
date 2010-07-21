@@ -8,7 +8,7 @@ leaf_tags = ['clip', 'lit', 'lit-tag', 'with-param', 'var',  'b', 'list', 'patte
 # clip, lit-tag need special handling if inside of any of these tags
 delayed_tags = ['let', 'modify-case']
 
-DEBUG_MODE = False
+DEBUG_MODE = True
 
 class ExpatParser(object):
     def __init__(self, fileName, compiler):
@@ -381,13 +381,13 @@ class EventHandler(object):
 
     # list of 'ending' event handlers
     def handle_and_end(self, event, codebuffer):
-        codebuffer.append('#dummy and')
+        codebuffer.append('and')
 
     def handle_or_end(self, event, codebuffer):
-        codebuffer.append('#dummy or')
+        codebuffer.append('or')
 
     def handle_not_end(self, event, codebuffer):
-        codebuffer.append('#dummy not')
+        codebuffer.append('not')
 
     def handle_equal_end(self, event, codebuffer):
         try:
@@ -446,6 +446,11 @@ class EventHandler(object):
                 code.extend(self.__get_lit_basic_code(child2))
             elif child2.name == 'var':
                 code.extend(self.__get_var_basic_code(child2))
+            elif child2.name == 'clip':
+                code.extend(self.__get_clip_tag_basic_code(child2))
+                # normal rvalue cliptl or clipsl for 'clip'
+                code.extend(self.__get_clip_tag_rvalue_code(child2))
+                
 
             # storetl or storesl
             code.extend(self.__get_clip_tag_lvalue_code(child1))
@@ -461,6 +466,8 @@ class EventHandler(object):
                 code.extend(self.__get_lit_tag_basic_code(child2))
             elif child2.name == 'lit':
                 code.extend(self.__get_lit_basic_code(child2))
+            elif child2.name == 'var':
+                code.extend(self.__get_var_basic_code(child2))
 
             # now the extra instuction for the assignment
             code.append('storev')
