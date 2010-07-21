@@ -237,8 +237,10 @@ class EventHandler(object):
         self.codestack.append([self.callStack.getLength(), 'def-macro', code])
 
     def handle_choose_start(self, event):
+        #a = self.compiler.parentRecord.getChilds(event)
+        #print a
         pass
-
+        
     def handle_when_start(self, event):
         self.compiler.whenid += 1
         self.compiler.whenStack.append(self.compiler.whenid)
@@ -247,6 +249,12 @@ class EventHandler(object):
         self.labels.append(label)
         code = [label + ':	nop']
         self.codestack.append([self.callStack.getLength(), 'when', code])
+
+    def handle_otherwise_start(self, event):
+        label = u'otherwise_' + str(self.compiler.otherwiseid) + u'_start'
+        self.labels.append(label)
+        code = [label + ':	nop']
+        self.codestack.append([self.callStack.getLength(), 'otherwise', code])
 
     def __get_xml_tag(self, event):
         tag = '<' + event.name
@@ -413,7 +421,7 @@ class EventHandler(object):
 
     def handle_def_macro_end(self, event, codebuffer):
         label = u'macro_' + event.attrs['n'] + u'_end'
-        codebuffer.append(label + '	:ret')
+        codebuffer.append(label + '\t:ret')
         self.labels.append(label)
         self.macroMode = False
 
@@ -421,12 +429,23 @@ class EventHandler(object):
         pass
 
     def handle_when_end(self, event, codebuffer):
-        label = u'when_' + str(self.compiler.whenStack[-1]) + u'_end'
+        local_whenid = self.compiler.whenStack[-1]
+        label = u'when_' + str(local_whenid) + u'_end'
         self.labels.append(label)
         codebuffer.append(label + ':\tnop')
         
         #self.compiler.whenid += 1
+
+        # set the otherwiseid, if there is actually any otherwise following this when
+        # the otherwiseid will be used
+        self.compiler.otherwiseid = local_whenid
         self.compiler.whenStack.pop()
+
+    def handle_otherwise_end(self, event, codebuffer):
+        label = u'otherwise_' + str(self.compiler.otherwiseid) + u'_end'
+        self.labels.append(label)
+        codebuffer.append(label + ':\tnop')
+        
 
     def handle_test_end(self, event, codebuffer):
         # FIXME: this will probably not work in case of nested 'when' and 'otehrwise'
@@ -524,7 +543,9 @@ class Compiler(object):
         self.codestack = []
 
         # id variables use for labeling, these need to be incremented
-        self.whenid = 1
+        self.whenid = 0
+        # otherwiseid, calculated from whenid but initially set to 0
+        self.otherwiseid = 0
 
         # state variables
         self.MACRO_MODE = False
