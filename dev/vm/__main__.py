@@ -37,7 +37,7 @@ class InputReader(object):
         with open(filename) as f: self.text = f.read().strip()
 
 if __name__ == "__main__":
-    inr = InputReader('stage1in.txt')
+    inr = InputReader('input-vm/stage1in.txt')
 
     # generate transfer words from source string
     twf = TransferWordFactory(inr.text)
@@ -47,7 +47,7 @@ if __name__ == "__main__":
     # create the trie add the rules, this rules will be created from t1x files def-cat section
     t = Trie()
 
-    vmreader = VMReader('demo.vm')
+    vmreader = VMReader('input-vm/demo.vm')
     cs = vmreader.getCodeSegment()
     
     s = VMStack()
