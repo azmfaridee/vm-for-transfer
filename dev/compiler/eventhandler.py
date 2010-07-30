@@ -13,7 +13,7 @@ class EventHandler(object):
 
 
     # list if private helper functions
-    def __check_for_append_mode(self):
+    def __check_for_special_mode(self):
         if self.compiler.APPEND_MODE == True:
             self.compiler.appendModeArgs += 1
             
@@ -131,7 +131,7 @@ class EventHandler(object):
         self.codestack.append([self.callStack.getLength(), 'clip', code])
 
         # other misc tasks
-        self.__check_for_append_mode()
+        self.__check_for_special_mode()
 
     def handle_lit_tag_start(self, event):
         if True in map(self.compiler.callStack.hasEventNamed, delayed_tags):
@@ -140,7 +140,7 @@ class EventHandler(object):
         self.codestack.append([self.callStack.getLength(), 'lit-tag', code])
 
         # other misc tasks
-        self.__check_for_append_mode()
+        self.__check_for_special_mode()
             
     def handle_lit_start(self, event):
         if True in map(self.compiler.callStack.hasEventNamed, delayed_tags):
@@ -149,7 +149,7 @@ class EventHandler(object):
         self.codestack.append([self.callStack.getLength(), 'lit-tag', code])
 
         # other misc tasks
-        self.__check_for_append_mode()
+        self.__check_for_special_mode()
     
     def handle_var_start(self, event):
         if True in map(self.compiler.callStack.hasEventNamed, delayed_tags):

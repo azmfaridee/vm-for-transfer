@@ -1,3 +1,4 @@
+from copy import copy, deepcopy
 DEBUG_MODE = False
 
 class CodeGenerator(object):

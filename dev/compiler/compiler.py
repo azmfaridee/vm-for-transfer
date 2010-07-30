@@ -33,6 +33,7 @@ class Compiler(object):
         self.NESTED_WHEN_MODE = False
         
         self.CONCAT_MODE = False
+        self.concatModeArgs = 0
         
         # data structures
         # whenstack is used for nested when call
@@ -50,6 +51,8 @@ class Compiler(object):
         self.eventHandler = EventHandler(self)
 
         self.processedCode = []
+        
+        self.lazyBuffer = {}
 
     def compile(self):
         self.parser.parse()
@@ -65,7 +68,7 @@ class Compiler(object):
                 
                 self.processedCode.append(line)
         else:
-            raise CompilerException("FATAL ERROR: Cannot optimize code, the code did not compile correctly!")
+            raise CompilerException("FATAL ERROR:\n\tCannot optimize code, the code did not compile correctly!\n\tCurrent Codestack length: " + str(len(self.codestack)))
 
         
     def printCode(self):
