@@ -114,8 +114,8 @@ class EventHandler(object):
     
     def handle_clip_start(self, event):
         #def handle_clip_start(self, event, internal_call = False, called_by = None):
-        if True in map(self.compiler.callStack.hasEventNamed, delayed_tags):
-        #if True in map(self.compiler.callStack.hasImmediateParent, delayed_tags):
+        #if True in map(self.compiler.callStack.hasEventNamed, delayed_tags):
+        if True in map(self.compiler.callStack.hasImmediateParent, delayed_tags):
             # silently return, when inside delayed tags
             return
 
@@ -137,7 +137,8 @@ class EventHandler(object):
         self.__check_for_special_mode()
 
     def handle_lit_tag_start(self, event):
-        if True in map(self.compiler.callStack.hasEventNamed, delayed_tags):
+        #if True in map(self.compiler.callStack.hasEventNamed, delayed_tags):
+        if True in map(self.compiler.callStack.hasImmediateParent, delayed_tags):
             return
         code = self.codeGenerator.get_lit_tag_basic_code(event)
         self.codestack.append([self.callStack.getLength(), 'lit-tag', code])
@@ -146,7 +147,8 @@ class EventHandler(object):
         self.__check_for_special_mode()
             
     def handle_lit_start(self, event):
-        if True in map(self.compiler.callStack.hasEventNamed, delayed_tags):
+        #if True in map(self.compiler.callStack.hasEventNamed, delayed_tags):
+        if True in map(self.compiler.callStack.hasImmediateParent, delayed_tags):
             return        
         code = self.codeGenerator.get_lit_basic_code(event)
         self.codestack.append([self.callStack.getLength(), 'lit-tag', code])
@@ -155,11 +157,12 @@ class EventHandler(object):
         self.__check_for_special_mode()
     
     def handle_var_start(self, event):
-        if True in map(self.compiler.callStack.hasEventNamed, delayed_tags):
+        #if True in map(self.compiler.callStack.hasEventNamed, delayed_tags):
+        if True in map(self.compiler.callStack.hasImmediateParent, delayed_tags):
             return       
         code = self.codeGenerator.get_var_basic_code(event)
         self.codestack.append([self.callStack.getLength(), 'var', code])
-
+        
     def handle_append_start(self, event):
         global DEBUG_MODE        
         self.compiler.APPEND_MODE = True
@@ -169,8 +172,19 @@ class EventHandler(object):
         code.append(u'push\t' +  event.attrs['n'])
         self.codestack.append([self.callStack.getLength(), 'append', code])
         
+    def handle_let_start(self, event):
+        global DEBUG_MODE
+        code = []
+        if DEBUG_MODE:
+            code.append(u'### DEBUG: ' + self.codeGenerator.get_xml_tag(event))
+
     def handle_concat_start(self, event):
+        global DEBUG_MODE
         self.compiler.CONCAT_MODE = True
+        code = []
+        if DEBUG_MODE:
+            code.append(u'### DEBUG: ' + self.codeGenerator.get_xml_tag(event))
+        self.codestack.append([self.callStack.getLength(), 'concat', code])
 
 
     # list of 'ending' event handlers
@@ -325,4 +339,13 @@ class EventHandler(object):
         self.compiler.APPEND_MODE = False
 
     def handle_concat_end(self, event, codebuffer):
+        # first append the required instruction to codebuffer
+        codebuffer.append(u'push\t' + str(self.compiler.concatModeArgs))
+        codebuffer.append(u'concat')
+        
+        # reset the state variables regarding append mode
+        self.compiler.concatModeArgs = 0
         self.compiler.CONCAT_MODE = False
+
+        # the caller function will check if this, and delay the codebuffer write
+        return codebuffer
