@@ -16,6 +16,8 @@ class EventHandler(object):
     def __check_for_special_mode(self):
         if self.compiler.APPEND_MODE == True:
             self.compiler.appendModeArgs += 1
+        if self.compiler.CONCAT_MODE == True:
+            self.compiler.concatModeArgs += 1
             
 
     # list of 'starting' event handlers
@@ -111,8 +113,9 @@ class EventHandler(object):
 
     
     def handle_clip_start(self, event):
-        #def handle_clip_start(self, event, internal_call = False, called_by = None):        
+        #def handle_clip_start(self, event, internal_call = False, called_by = None):
         if True in map(self.compiler.callStack.hasEventNamed, delayed_tags):
+        #if True in map(self.compiler.callStack.hasImmediateParent, delayed_tags):
             # silently return, when inside delayed tags
             return
 

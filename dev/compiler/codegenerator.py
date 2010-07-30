@@ -1,5 +1,5 @@
 from copy import copy, deepcopy
-DEBUG_MODE = False
+DEBUG_MODE = True
 
 class CodeGenerator(object):
     def __init__(self, compiler):
