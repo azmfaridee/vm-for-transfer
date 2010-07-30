@@ -33,6 +33,12 @@ class CallStack(object):
             if event.name == name:
                 return True
         return False
-
+    
+    def hasImmediateParent(self, name):
+        if self.stack[-2].name == name:
+            return True
+        else:
+            return False
+    
     def __repr__(self):
         return self.stack.__repr__()

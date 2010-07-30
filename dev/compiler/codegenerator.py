@@ -81,3 +81,4 @@ class CodeGenerator(object):
             code.append(u'### DEBUG: ' + self.get_xml_tag(event))                
         code.append(u'pushv\t' + event.attrs['n'])
         return code
+ 

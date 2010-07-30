@@ -2,6 +2,7 @@ from callstack import CallStack
 from symboltable import SymbolTable
 from expatparser import ExpatParser
 from eventhandler import EventHandler
+from compilerexception import CompilerException
 
 class Compiler(object):
     """
