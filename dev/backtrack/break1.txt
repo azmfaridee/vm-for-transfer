@@ -1,0 +1,237 @@
+diff --git a/dev/compiler/__main__.py b/dev/compiler/__main__.py
+index b9752ac..49a1657 100644
+--- a/dev/compiler/__main__.py
++++ b/dev/compiler/__main__.py
+@@ -2,7 +2,7 @@ from compilerexception import CompilerException
+ from compiler import Compiler
+ 
+ if __name__ == '__main__':
+-    inputfile = 'input-compiler/set1.t1x'
++    inputfile = '../input-compiler/set1.t1x'    
+     #inputfile = 'apertium-en-ca.en-ca.t1x'
+ 
+     try:
+diff --git a/dev/compiler/callstack.py b/dev/compiler/callstack.py
+index 4ebc97d..97d2466 100644
+--- a/dev/compiler/callstack.py
++++ b/dev/compiler/callstack.py
+@@ -34,5 +34,11 @@ class CallStack(object):
+                 return True
+         return False
+ 
++    def hasImmediateParent(self, name):
++        if self.stack[-2].name == name:
++            return True
++        else:
++            return False
++
+     def __repr__(self):
+         return self.stack.__repr__()
+diff --git a/dev/compiler/codegenerator.py b/dev/compiler/codegenerator.py
+index 50e52ea..acd5d43 100644
+--- a/dev/compiler/codegenerator.py
++++ b/dev/compiler/codegenerator.py
+@@ -1,4 +1,4 @@
+-DEBUG_MODE = False
++DEBUG_MODE = True
+ 
+ class CodeGenerator(object):
+     def __init__(self, compiler):
+@@ -80,4 +80,4 @@ class CodeGenerator(object):
+         if DEBUG_MODE:
+             code.append(u'### DEBUG: ' + self.get_xml_tag(event))                
+         code.append(u'pushv\t' + event.attrs['n'])
+-        return code
+\ No newline at end of file
++        return code
+diff --git a/dev/compiler/compiler.py b/dev/compiler/compiler.py
+index c7928f7..115873c 100644
+--- a/dev/compiler/compiler.py
++++ b/dev/compiler/compiler.py
+@@ -2,6 +2,7 @@ from callstack import CallStack
+ from symboltable import SymbolTable
+ from expatparser import ExpatParser
+ from eventhandler import EventHandler
++from compilerexception import CompilerException
+ 
+ class Compiler(object):
+     """
+@@ -32,6 +33,7 @@ class Compiler(object):
+         self.NESTED_WHEN_MODE = False
+         
+         self.CONCAT_MODE = False
++        self.concatModeArgs = 0
+         
+         # data structures
+         # whenstack is used for nested when call
+@@ -50,6 +52,10 @@ class Compiler(object):
+ 
+         self.processedCode = []
+ 
++        # we use this buffer when we want to postpone writing of the current code buffer, for e.g. when we are handling concat
++        ## self.lazyBuffer = {}
++        
++
+     def compile(self):
+         self.parser.parse()
+ 
+@@ -64,7 +70,7 @@ class Compiler(object):
+                 
+                 self.processedCode.append(line)
+         else:
+-            raise CompilerException("FATAL ERROR: Cannot optimize code, the code did not compile correctly!")
++            raise CompilerException("FATAL ERROR:\n\tCannot optimize code, the code did not compile correctly!\n\tCurrent Codestack length: " + str(len(self.codestack)))
+ 
+         
+     def printCode(self):
+diff --git a/dev/compiler/compilerexception.py b/dev/compiler/compilerexception.py
+index 00201b8..d1d26e5 100644
+--- a/dev/compiler/compilerexception.py
++++ b/dev/compiler/compilerexception.py
+@@ -1,3 +1,2 @@
+ class CompilerException(Exception):
+-    def __init__(self):
+-        pass
++    pass
+diff --git a/dev/compiler/eventhandler.py b/dev/compiler/eventhandler.py
+index 2d52180..6738938 100644
+--- a/dev/compiler/eventhandler.py
++++ b/dev/compiler/eventhandler.py
+@@ -1,4 +1,5 @@
+ from codegenerator import CodeGenerator, DEBUG_MODE
++from copy import copy, deepcopy
+ 
+ # clip, lit-tag need special handling if inside of any of these tags
+ delayed_tags = ['let', 'modify-case']
+@@ -11,11 +12,12 @@ class EventHandler(object):
+         self.labels = self.compiler.labels
+         self.codeGenerator = CodeGenerator(self.compiler)
+ 
+-
+     # list if private helper functions
+-    def __check_for_append_mode(self):
++    def __check_for_special_mode(self):
+         if self.compiler.APPEND_MODE == True:
+             self.compiler.appendModeArgs += 1
++        if self.compiler.CONCAT_MODE == True:
++            self.compiler.concatModeArgs += 1
+             
+ 
+     # list of 'starting' event handlers
+@@ -112,7 +114,8 @@ class EventHandler(object):
+     
+     def handle_clip_start(self, event):
+         #def handle_clip_start(self, event, internal_call = False, called_by = None):        
+-        if True in map(self.compiler.callStack.hasEventNamed, delayed_tags):
++        #if True in map(self.compiler.callStack.hasEventNamed, delayed_tags):
++        if True in map(self.compiler.callStack.hasImmediateParent, delayed_tags):
+             # silently return, when inside delayed tags
+             return
+ 
+@@ -131,28 +134,31 @@ class EventHandler(object):
+         self.codestack.append([self.callStack.getLength(), 'clip', code])
+ 
+         # other misc tasks
+-        self.__check_for_append_mode()
++        self.__check_for_special_mode()
+ 
+     def handle_lit_tag_start(self, event):
+-        if True in map(self.compiler.callStack.hasEventNamed, delayed_tags):
++        #if True in map(self.compiler.callStack.hasEventNamed, delayed_tags):
++        if True in map(self.compiler.callStack.hasImmediateParent, delayed_tags):
+             return
+         code = self.codeGenerator.get_lit_tag_basic_code(event)
+         self.codestack.append([self.callStack.getLength(), 'lit-tag', code])
+ 
+         # other misc tasks
+-        self.__check_for_append_mode()
++        self.__check_for_special_mode()
+             
+     def handle_lit_start(self, event):
+-        if True in map(self.compiler.callStack.hasEventNamed, delayed_tags):
++        # if True in map(self.compiler.callStack.hasEventNamed, delayed_tags):
++        if True in map(self.compiler.callStack.hasImmediateParent, delayed_tags):
+             return        
+         code = self.codeGenerator.get_lit_basic_code(event)
+         self.codestack.append([self.callStack.getLength(), 'lit-tag', code])
+ 
+         # other misc tasks
+-        self.__check_for_append_mode()
++        self.__check_for_special_mode()
+     
+     def handle_var_start(self, event):
+-        if True in map(self.compiler.callStack.hasEventNamed, delayed_tags):
++        #if True in map(self.compiler.callStack.hasEventNamed, delayed_tags):
++        if True in map(self.compiler.callStack.hasImmediateParent, delayed_tags):
+             return       
+         code = self.codeGenerator.get_var_basic_code(event)
+         self.codestack.append([self.callStack.getLength(), 'var', code])
+@@ -165,9 +171,20 @@ class EventHandler(object):
+             code.append(u'### DEBUG: ' + self.codeGenerator.get_xml_tag(event))
+         code.append(u'push\t' +  event.attrs['n'])
+         self.codestack.append([self.callStack.getLength(), 'append', code])
+-        
++
++    def handle_let_start(self, event):
++        global DEBUG_MODE
++        code = []
++        if DEBUG_MODE:
++            code.append(u'### DEBUG: ' + self.codeGenerator.get_xml_tag(event))
++
+     def handle_concat_start(self, event):
++        global DEBUG_MODE
+         self.compiler.CONCAT_MODE = True
++        code = []
++        if DEBUG_MODE:
++            code.append(u'### DEBUG: ' + self.codeGenerator.get_xml_tag(event))
++        self.codestack.append([self.callStack.getLength(), 'concat', code])
+ 
+ 
+     # list of 'ending' event handlers
+@@ -322,4 +339,13 @@ class EventHandler(object):
+         self.compiler.APPEND_MODE = False
+ 
+     def handle_concat_end(self, event, codebuffer):
++        # first append the required instruction to codebuffer
++        codebuffer.append(u'push\t' + str(self.compiler.concatModeArgs))
++        codebuffer.append(u'concat')
++        
++        # reset the state variables regarding append mode
++        self.compiler.concatModeArgs = 0
+         self.compiler.CONCAT_MODE = False
++
++        # the caller function will check if this, and delay the codebuffer write
++        return codebuffer
+diff --git a/dev/compiler/expatparser.py b/dev/compiler/expatparser.py
+index e0a9b5e..5776804 100644
+--- a/dev/compiler/expatparser.py
++++ b/dev/compiler/expatparser.py
+@@ -71,18 +71,23 @@ class ExpatParser(object):
+ 
+             ## print event
+             ## print codebuffer
+-            ## print 'CODESTACK after POP', self.compiler.codestack
++            # print 'CODESTACK after POP', self.compiler.codestack[-2:]
+             ## print 'DATA TO APPEND', [callStackLength, name, codebuffer]
+             ## print
+-
++            
+             handler = self.compiler.eventHandler
+             method_name = 'handle_' + name.replace('-', '_') + '_end'
+             if hasattr(handler, method_name):
+                 method = getattr(handler, method_name)
++                ## result = method(event, codebuffer)
+                 method(event, codebuffer)
+-
+-
+-            self.compiler.codestack.append([callStackLength, name, codebuffer])
++                # sometimes (for e.g. in concat) we need to delay codebuffer write
++                # in that case, the function wiil 
++                ## if result != None:
++                ##     self.compiler.lazyBuffer[name] = result
++                ##     self.compiler.codestack.append([callStackLength, name, []])             
++                ## else:
++                self.compiler.codestack.append([callStackLength, name, codebuffer])
+             
+         
+         #print 'END',  self.callStack
