@@ -77,12 +77,16 @@ class ExpatParser(object):
 
             handler = self.compiler.eventHandler
             method_name = 'handle_' + name.replace('-', '_') + '_end'
+            
+            result = None
             if hasattr(handler, method_name):
                 method = getattr(handler, method_name)
-                method(event, codebuffer)
-
-
-            self.compiler.codestack.append([callStackLength, name, codebuffer])
+                result = method(event, codebuffer)
+            if result == None:
+                self.compiler.codestack.append([callStackLength, name, codebuffer])
+            else:
+                self.compiler.codestack.append([callStackLength, name, []])
+                self.compiler.lazyBuffer[name] = result
             
         
         #print 'END',  self.callStack

@@ -185,7 +185,19 @@ class EventHandler(object):
         if DEBUG_MODE:
             code.append(u'### DEBUG: ' + self.codeGenerator.get_xml_tag(event))
         self.codestack.append([self.callStack.getLength(), 'concat', code])
-
+        
+    def handle_list_start(self, event):
+        global DEBUG_MODE
+        code = []
+        if DEBUG_MODE:
+            code.append(u'### DEBUG: ' + self.codeGenerator.get_xml_tag(event))
+        
+        in_tag = self.callStack.getTop(2)
+        if 'caseless' in in_tag.attrs and in_tag.attrs['caseless'] == 'yes':
+            code.append(u'incini\t' + event.attrs['n'])
+        else:
+            code.append(u'incin\t' + event.attrs['n'])
+        self.codestack.append([self.callStack.getLength(), 'list', code])
 
     # list of 'ending' event handlers
     def handle_and_end(self, event, codebuffer):
@@ -298,7 +310,9 @@ class EventHandler(object):
                 code.extend(self.codeGenerator.get_clip_tag_basic_code(child2))
                 # normal rvalue cliptl or clipsl for 'clip'
                 code.extend(self.codeGenerator.get_clip_tag_rvalue_code(child2))
-                
+            elif child2.name == 'concat':
+                lazyCode = self.compiler.lazyBuffer.pop('concat')
+                code.extend(lazyCode)    
 
             # storetl or storesl
             code.extend(self.codeGenerator.get_clip_tag_lvalue_code(child1))
@@ -316,6 +330,9 @@ class EventHandler(object):
                 code.extend(self.codeGenerator.get_lit_basic_code(child2))
             elif child2.name == 'var':
                 code.extend(self.codeGenerator.get_var_basic_code(child2))
+            elif child2.name == 'concat':
+                lazyCode = self.compiler.lazyBuffer.pop('concat')
+                code.extend(lazyCode)
 
             # now the extra instuction for the assignment
             code.append(u'storev')
