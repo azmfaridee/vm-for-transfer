@@ -5,7 +5,6 @@ skip_tags = ['cat-item', 'def-cat', 'section-def-cats', 'attr-item', 'def-attr',
 
 leaf_tags = ['clip', 'lit', 'lit-tag', 'with-param', 'var',  'b', 'list', 'pattern-item']
 
-
 class ExpatParser(object):
     def __init__(self, fileName, compiler):
         self.fileName = fileName

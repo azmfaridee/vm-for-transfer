@@ -75,6 +75,12 @@ class EventHandler(object):
         if def_list_id not in self.compiler.def_lists.keys():
             self.compiler.def_lists[def_list_id] = []
         self.compiler.def_lists[def_list_id].append(event.attrs['v'])
+        
+    def handle_section_def_macros_start(self, event):
+        label = u'section_def_macros_start'
+        self.labels.append(label)
+        code = [label + ':\tnop']
+        self.codestack.append([self.callStack.getLength(), 'section-def-macros', code])
 
     def handle_def_macro_start(self, event):
         # FIXME later, the macro mode
@@ -230,7 +236,12 @@ class EventHandler(object):
 
     def handle_in_end(self, event, codebuffer):
         pass
-
+    
+    def handle_section_def_macros_end(self, event, codebuffer):
+        label = u'section_def_macros_end'
+        self.labels.append(label)
+        codebuffer.append(label + ':\tnop')
+        
     def handle_def_macro_end(self, event, codebuffer):
         label = u'macro_' + event.attrs['n'] + u'_end'
         codebuffer.append(label + '\t:ret')
