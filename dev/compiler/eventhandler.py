@@ -81,6 +81,12 @@ class EventHandler(object):
         self.labels.append(label)
         code = [label + ':\tnop']
         self.codestack.append([self.callStack.getLength(), 'section-def-macros', code])
+        
+    def handle_section_rules_start(self, event):
+        label = u'section_rules_start'
+        self.labels.append(label)
+        code = [label + ':\tnop']
+        self.codestack.append([self.callStack.getLength(), 'section-rules', code])
 
     def handle_def_macro_start(self, event):
         # FIXME later, the macro mode
@@ -242,6 +248,12 @@ class EventHandler(object):
         self.labels.append(label)
         codebuffer.append(label + ':\tnop')
         
+    def handle_section_rules_end(self, event, codebuffer):
+        label = u'section_rules_end'
+        self.labels.append(label)
+        codebuffer.append(label + ':\tnop')
+
+
     def handle_def_macro_end(self, event, codebuffer):
         label = u'macro_' + event.attrs['n'] + u'_end'
         codebuffer.append(label + '\t:ret')
