@@ -113,8 +113,15 @@ class EventHandler(object):
         
         label = u'when_' + str(self.compiler.whenStack[-1]) + u'_start'
         self.labels.append(label)
-        code = [label + ':	nop']
+        code = [label + ':\tnop']
         self.codestack.append([self.callStack.getLength(), 'when', code])
+        
+    def handle_action_start(self, event):
+        self.compiler.actionid += 1
+        label = u'action_' + str(self.compiler.actionid) + u'_start'
+        self.labels.append(label)
+        code = [label + ':\tnop']
+        self.codestack.append([self.callStack.getLength(), 'action', code])
 
     def handle_otherwise_start(self, event):
         self.compiler.otherwiseStack.append(self.compiler.otherwiseid)
@@ -253,7 +260,6 @@ class EventHandler(object):
         self.labels.append(label)
         codebuffer.append(label + ':\tnop')
 
-
     def handle_def_macro_end(self, event, codebuffer):
         label = u'macro_' + event.attrs['n'] + u'_end'
         codebuffer.append(label + '\t:ret')
@@ -281,6 +287,11 @@ class EventHandler(object):
                     codebuffer[index] = line.replace('#!#jmp\t', 'jmp\t')
                     break
             codebuffer.reverse()
+            
+    def handle_action_end(self, event, codebuffer):
+        label = u'action_' + str(self.compiler.actionid) + '_end'
+        code = [label + ':\tnop']
+        codebuffer.extend(code)
                 
     def handle_when_end(self, event, codebuffer):
         code = []

@@ -23,6 +23,7 @@ class Compiler(object):
         self.whenid = 0
         # otherwiseid, calculated from whenid but initially set to 0
         self.otherwiseid = 0
+        self.actionid = 0
 
         # state variables
         self.MACRO_MODE = False
