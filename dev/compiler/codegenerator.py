@@ -18,7 +18,7 @@ class CodeGenerator(object):
         code = []
         if DEBUG_MODE:
             code.append(u'### DEBUG: ' + self.get_xml_tag(event))
-        code.append(u'push\t' + '<' + event.attrs['v'] + '>')        
+        code.append(u'push\t"<' + event.attrs['v'] + '>"')        
         return code
 
     def get_clip_tag_basic_code(self, event):
@@ -47,7 +47,7 @@ class CodeGenerator(object):
         # push pos
         code.append(u'push\t' + event.attrs['pos'])
         # push regex
-        code.append(u'push\t' + regex)
+        code.append(u'push\t"' + regex + u'"')
 
         return code
 
@@ -72,7 +72,7 @@ class CodeGenerator(object):
         code = []
         if DEBUG_MODE:
             code.append(u'### DEBUG: ' + self.get_xml_tag(event))        
-        code.append(u'push\t' + event.attrs['v'])
+        code.append(u'push\t"' + event.attrs['v'] + '"')
         return code    
 
     def get_var_basic_code(self, event):
@@ -80,6 +80,6 @@ class CodeGenerator(object):
         code = []
         if DEBUG_MODE:
             code.append(u'### DEBUG: ' + self.get_xml_tag(event))                
-        code.append(u'pushv\t' + event.attrs['n'])
+        code.append(u'pushv\t"' + event.attrs['n'] + '"')
         return code
  
