@@ -24,6 +24,8 @@ class Compiler(object):
         # otherwiseid, calculated from whenid but initially set to 0
         self.otherwiseid = 0
         self.actionid = 0
+        self.pattern_item_count = 0
+        self.macro_args_count = 0
 
         # state variables
         self.MACRO_MODE = False

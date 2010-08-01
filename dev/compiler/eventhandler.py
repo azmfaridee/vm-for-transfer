@@ -18,6 +18,14 @@ class EventHandler(object):
             self.compiler.appendModeArgs += 1
         if self.compiler.CONCAT_MODE == True:
             self.compiler.concatModeArgs += 1
+          
+    # function to generate cross prdouct,
+    # used in pattern section
+    def __cross(self, args):
+        ans = [[]]
+        for arg in args:
+            ans = [x+[y] for x in ans for y in arg]
+        return ans
             
 
     # list of 'starting' event handlers
@@ -122,6 +130,9 @@ class EventHandler(object):
         self.labels.append(label)
         code = [label + ':\tnop']
         self.codestack.append([self.callStack.getLength(), 'action', code])
+    
+    def handle_with_param_start(self, event):
+        self.compiler.macro_args_count += 1
 
     def handle_otherwise_start(self, event):
         self.compiler.otherwiseStack.append(self.compiler.otherwiseid)
@@ -217,6 +228,9 @@ class EventHandler(object):
         else:
             code.append(u'incin\t' + event.attrs['n'])
         self.codestack.append([self.callStack.getLength(), 'list', code])
+        
+    def handle_pattern_item_start(self, event):
+        self.compiler.pattern_item_count += 1
 
     # list of 'ending' event handlers
     def handle_and_end(self, event, codebuffer):
@@ -400,3 +414,44 @@ class EventHandler(object):
 
         # the caller function will check if this, and delay the codebuffer write
         return codebuffer
+    
+    def handle_pattern_end(self, event, codebuffer):
+        childs = self.compiler.symbolTable.getChilds(event)
+        code = []
+        args = []
+        
+        # combination code
+        #for child in childs:
+        #    def_cat_id = child.attrs['n']
+        #    args.append(self.compiler.def_cats[def_cat_id])
+        #    
+        #pattern_combinations = self.__cross(args)
+        #for combination in pattern_combinations:
+        #    for item in combination:
+        #        code.append(u'push\t"' + item + '"')
+        #    code.append(u'push\t' + str(self.compiler.pattern_item_count))
+        #    
+        #    # need to add 1 to actionid because we haven't reached the action yet
+        #    code.append(u'addtrie\t"action_' + str(self.compiler.actionid + 1) + '_start"')
+        
+        # code without combination, for the time being work with this one
+        for child in childs:
+            code.append(u'push\t"' + child.attrs['n'] + '"')
+        code.append(u'push\t' + str(self.compiler.pattern_item_count))
+        code.append(u'addtrie\t"action_' + str(self.compiler.actionid + 1) + '_start"')
+            
+        codebuffer.extend(code)
+        self.compiler.pattern_item_count = 0
+        #print code
+        #print
+        
+    def handle_call_macro_end(self, event, codebuffer):        
+        code = []
+        childs = self.compiler.symbolTable.getChilds(event)
+        for child in childs:
+            code.append(u'push\t' + child.attrs['pos'])
+        code.append(u'push\t' + str(self.compiler.macro_args_count))
+        code.append(u'call\tmacro_' + event.attrs['n'] + u'_start')
+        
+        codebuffer.extend(code)
+        self.compiler.macro_args_count = 0

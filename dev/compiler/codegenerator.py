@@ -83,3 +83,5 @@ class CodeGenerator(object):
         code.append(u'pushv\t"' + event.attrs['n'] + '"')
         return code
  
+    def get_pattern_basic_code(self, event):
+        pass
