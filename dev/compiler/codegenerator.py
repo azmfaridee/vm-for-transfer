@@ -75,12 +75,15 @@ class CodeGenerator(object):
         code.append(u'push\t"' + event.attrs['v'] + '"')
         return code    
 
-    def get_var_basic_code(self, event):
+    def get_var_basic_code(self, event, tagged = False):
         global DEBUG_MODE        
         code = []
         if DEBUG_MODE:
-            code.append(u'### DEBUG: ' + self.get_xml_tag(event))                
-        code.append(u'pushv\t"' + event.attrs['n'] + '"')
+            code.append(u'### DEBUG: ' + self.get_xml_tag(event))
+        if tagged:
+            code.append(u'pusht\t"' + event.attrs['n'] + '"')
+        else:
+            code.append(u'pushv\t"' + event.attrs['n'] + '"')
         return code
  
     def get_pattern_basic_code(self, event):

@@ -189,8 +189,11 @@ class EventHandler(object):
     def handle_var_start(self, event):
         #if True in map(self.compiler.callStack.hasEventNamed, delayed_tags):
         if True in map(self.compiler.callStack.hasImmediateParent, delayed_tags):
-            return       
-        code = self.codeGenerator.get_var_basic_code(event)
+            return
+        if self.compiler.callStack.hasImmediateParent('tag'):
+            code = self.codeGenerator.get_var_basic_code(event, True)
+        else:
+            code = self.codeGenerator.get_var_basic_code(event)
         self.codestack.append([self.callStack.getLength(), 'var', code])
         
     def handle_append_start(self, event):
