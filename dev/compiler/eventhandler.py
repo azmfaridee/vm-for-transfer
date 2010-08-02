@@ -436,7 +436,11 @@ class EventHandler(object):
         
         # code without combination, for the time being work with this one
         for child in childs:
-            code.append(u'push\t"' + child.attrs['n'] + '"')
+            def_cat_id = child.attrs['n']
+            cat_items = self.compiler.def_cats[def_cat_id]
+            regex = reduce(lambda x, y: x + u'|' + y, cat_items)
+            #code.append(u'push\t"' + child.attrs['n'] + '"')
+            code.append(u'push\t"' + regex + '"')
         code.append(u'push\t' + str(self.compiler.pattern_item_count))
         code.append(u'addtrie\t"action_' + str(self.compiler.actionid + 1) + '_start"')
             
