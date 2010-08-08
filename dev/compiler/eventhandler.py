@@ -165,6 +165,9 @@ class EventHandler(object):
 
         # other misc tasks
         self.__check_for_special_mode()
+        
+    def handle_case_of_start(self, event):
+        pass
 
     def handle_lit_tag_start(self, event):
         #if True in map(self.compiler.callStack.hasEventNamed, delayed_tags):
@@ -265,7 +268,7 @@ class EventHandler(object):
         else:
             code.append(u'pushbl')
         self.codestack.append([self.callStack.getLength(), 'b', code]) 
-
+    
     # list of 'ending' event handlers
     def handle_and_end(self, event, codebuffer):
         codebuffer.append(u'and')
