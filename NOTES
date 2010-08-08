@@ -1,5 +1,11 @@
+Notes about tags:
+
 - <modify-case>
     - 2 childs
     - left child: <var>, a <clip> or a <case-of>
     - right child: <var> or a <lit>
+
+- <case-of>
+    - works exactly like <clip>, has the three attrs like <clip>
+
     

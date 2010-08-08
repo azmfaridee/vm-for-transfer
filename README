@@ -13,6 +13,12 @@ Compiler Pending Works:
     - we want patter1, patter2, action1, action2
 - tags that have not been implemented:
     - modify-case
+    - case-of
+    - begins-with
+    - ends-with
+    - contains-substring
+    - with-param (some functionality missing, maybe)
+    - get-case-from
 
 VM Pending Works
 -----------------------
