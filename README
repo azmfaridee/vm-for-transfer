@@ -17,3 +17,7 @@ Compiler Pending Works:
 VM Pending Works
 -----------------------
 - Change the search algo in the Trie
+
+Debugging:
+-----------------------
+-  <def-macro n="firstWord" npar="1">

@@ -1,0 +1,5 @@
+- <modify-case>
+    - 2 childs
+    - left child: <var>, a <clip> or a <case-of>
+    - right child: <var> or a <lit>
+    
