@@ -38,6 +38,8 @@ class Compiler(object):
         self.CONCAT_MODE = False
         self.concatModeArgs = 0
         
+        self.chunkModeArgs = 0
+        
         # data structures
         # whenstack is used for nested when call
         self.whenStack = []

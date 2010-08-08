@@ -237,13 +237,18 @@ class EventHandler(object):
         
     def handle_chunk_start(self, event):
         code = []
+        self.compiler.chunkModeArgs = 1
+        
         if DEBUG_MODE:
             code.append(u'### DEBUG: ' + self.codeGenerator.get_xml_tag(event))
+            
         #code.append('^')
+        
         if u'name' in event.attrs:
             code.append('push\t"' + event.attrs['name'] + '"')
         elif u'namefrom' in event.attrs:
             code.append('pushv\t"' + event.attrs['namefrom'] + '"')
+            
         self.codestack.append([self.callStack.getLength(), 'chunk', code])
         
     def handle_lu_start(self, event):
@@ -259,7 +264,7 @@ class EventHandler(object):
             code.append(u'pushsb\t' + event.attrs['pos'])
         else:
             code.append(u'pushbl')
-        self.codestack.append([self.callStack.getLength(), 'b', code])
+        self.codestack.append([self.callStack.getLength(), 'b', code]) 
 
     # list of 'ending' event handlers
     def handle_and_end(self, event, codebuffer):
@@ -490,10 +495,17 @@ class EventHandler(object):
         
     def handle_chunk_end(self, event, codebuffer):
         childs = self.compiler.symbolTable.getChilds(event)
-        no_of_chunk_params = len(childs)
+        
+        no_of_brace_params = 0
+        for child in childs:
+            if child.name == 'lu' or child.name == 'mlu' or child.name == 'b':
+                no_of_brace_params += 1
+        
         code = []
-        code.append(u'chunk\t' + str(no_of_chunk_params))
+        code.append(u'brace\t' + str(no_of_brace_params))
+        code.append(u'chunk\t' + str(self.compiler.chunkModeArgs + 1))
         codebuffer.extend(code)
+        
         
     def handle_lu_end(self, event, codebuffer):
         childs = self.compiler.symbolTable.getChilds(event)
@@ -515,3 +527,6 @@ class EventHandler(object):
         code = []
         code.append(u'out\t' + str(no_of_out_params))
         codebuffer.extend(code)
+        
+    def handle_tag_end(self, event, codebuffer):
+        self.compiler.chunkModeArgs += 1
