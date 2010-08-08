@@ -506,8 +506,20 @@ class EventHandler(object):
                 no_of_brace_params += 1
         
         code = []
+        
+        # put a brace around the curret lu/mlu collection
         code.append(u'brace\t' + str(no_of_brace_params))
-        code.append(u'chunk\t' + str(self.compiler.chunkModeArgs + 1))
+        
+        # varying version of chunk depending on 'case'
+        # FIXE: are there more values for 'case' other than this 3?
+        
+        if event.attrs['case'] == 'caseFirstWord':
+            code.append(u'chunkfw\t' + str(self.compiler.chunkModeArgs + 1))
+        elif event.attrs['case'] == 'caseOtherWord':
+            code.append(u'chunkow\t' + str(self.compiler.chunkModeArgs + 1))
+        elif event.attrs['case'] == 'variableCase':
+            code.append(u'chunkvc\t' + str(self.compiler.chunkModeArgs + 1))
+            
         codebuffer.extend(code)
         
         
