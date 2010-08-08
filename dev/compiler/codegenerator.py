@@ -25,6 +25,14 @@ class CodeGenerator(object):
         global DEBUG_MODE
         code = []
         regex = ''
+        
+        if DEBUG_MODE:
+                code.append(u'### DEBUG: ' + self.get_xml_tag(event))
+            
+        # link-to overrides everyting else        
+        if 'link-to' in event.attrs:
+            code.append(u'push\t"<' + event.attrs['link-to'] + '>"')
+            return code
 
         if event.attrs['part'] not in ['lem', 'lemh', 'lemq', 'whole', 'tags']:
             # does optimization help? need to check that
@@ -42,8 +50,6 @@ class CodeGenerator(object):
             elif event.attrs['part'] == 'tags':
                 regex = '\\t'
 
-        if DEBUG_MODE:
-            code.append(u'### DEBUG: ' + self.get_xml_tag(event))
         # push pos
         code.append(u'push\t' + event.attrs['pos'])
         # push regex
@@ -61,6 +67,9 @@ class CodeGenerator(object):
     def get_clip_tag_rvalue_code(self, event):
         # rvalue code, we want to 'read' clip's value
         code = []
+        if 'link-to' in event.attrs:
+            return code
+        
         if event.attrs['side'] == 'sl': code.append(u'clipsl')
         elif event.attrs['side'] == 'tl': code.append(u'cliptl')
         return code
