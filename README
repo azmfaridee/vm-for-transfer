@@ -17,7 +17,6 @@ Compiler Pending Works:
     - begins-with
     - ends-with
     - contains-substring
-    - with-param (some functionality missing, maybe)
     - get-case-from
 
 VM Pending Works

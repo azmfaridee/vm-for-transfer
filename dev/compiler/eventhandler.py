@@ -485,6 +485,7 @@ class EventHandler(object):
     def handle_call_macro_end(self, event, codebuffer):        
         code = []
         childs = self.compiler.symbolTable.getChilds(event)
+        # all the childs are <with-param> tag
         for child in childs:
             code.append(u'push\t' + child.attrs['pos'])
         code.append(u'push\t' + str(self.compiler.macro_args_count))
@@ -530,3 +531,6 @@ class EventHandler(object):
         
     def handle_tag_end(self, event, codebuffer):
         self.compiler.chunkModeArgs += 1
+
+    def handle_modify_case_end(self, event, codebuffer):
+        first, second = self.compiler.symbolTable.getChilds(event)
