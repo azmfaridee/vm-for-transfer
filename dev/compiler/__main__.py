@@ -21,4 +21,3 @@ if __name__ == '__main__':
         #pprint(compiler.symbolTable.childList)
     except CompilerException, ex:
         print ex
-

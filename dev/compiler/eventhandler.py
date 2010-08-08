@@ -234,6 +234,32 @@ class EventHandler(object):
         
     def handle_pattern_item_start(self, event):
         self.compiler.pattern_item_count += 1
+        
+    def handle_chunk_start(self, event):
+        code = []
+        if DEBUG_MODE:
+            code.append(u'### DEBUG: ' + self.codeGenerator.get_xml_tag(event))
+        #code.append('^')
+        if u'name' in event.attrs:
+            code.append('push\t"' + event.attrs['name'] + '"')
+        elif u'namefrom' in event.attrs:
+            code.append('pushv\t"' + event.attrs['namefrom'] + '"')
+        self.codestack.append([self.callStack.getLength(), 'chunk', code])
+        
+    def handle_lu_start(self, event):
+        #code = []
+        #code.append('{^')
+        #self.codestack.append([self.callStack.getLength(), 'lu', code])
+        pass
+    
+    # code for <b/> and <b pos="X"/>
+    def handle_b_start(self, event):
+        code = []
+        if 'pos' in event.attrs:
+            code.append(u'pushsb\t' + event.attrs['pos'])
+        else:
+            code.append(u'pushbl')
+        self.codestack.append([self.callStack.getLength(), 'b', code])
 
     # list of 'ending' event handlers
     def handle_and_end(self, event, codebuffer):
@@ -388,7 +414,6 @@ class EventHandler(object):
             # now the extra instuction for the assignment
             code.append(u'storev')
             
-
         codebuffer.extend(code)
 
     def handle_modify_case_end(self, event, codebuffer):
@@ -462,3 +487,31 @@ class EventHandler(object):
         
         codebuffer.extend(code)
         self.compiler.macro_args_count = 0
+        
+    def handle_chunk_end(self, event, codebuffer):
+        childs = self.compiler.symbolTable.getChilds(event)
+        no_of_chunk_params = len(childs)
+        code = []
+        code.append(u'chunk\t' + str(no_of_chunk_params))
+        codebuffer.extend(code)
+        
+    def handle_lu_end(self, event, codebuffer):
+        childs = self.compiler.symbolTable.getChilds(event)
+        no_of_lu_params = len(childs)
+        code = []
+        code.append(u'lu\t' + str(no_of_lu_params))
+        codebuffer.extend(code)
+        
+    def handle_mlu_end(self, event, codebuffer):
+        childs = self.compiler.symbolTable.getChilds(event)
+        no_of_mlu_params = len(childs)
+        code = []
+        code.append(u'mlu\t' + str(no_of_mlu_params))
+        codebuffer.extend(code)
+        
+    def handle_out_end(self, event, codebuffer):
+        childs = self.compiler.symbolTable.getChilds(event)
+        no_of_out_params = len(childs)
+        code = []
+        code.append(u'out\t' + str(no_of_out_params))
+        codebuffer.extend(code)

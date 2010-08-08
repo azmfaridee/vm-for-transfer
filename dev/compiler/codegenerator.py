@@ -22,7 +22,7 @@ class CodeGenerator(object):
         return code
 
     def get_clip_tag_basic_code(self, event):
-        global DEBUG_MODE        
+        global DEBUG_MODE
         code = []
         regex = ''
 
@@ -66,7 +66,7 @@ class CodeGenerator(object):
         return code
 
     def get_lit_basic_code(self, event):
-        global DEBUG_MODE        
+        global DEBUG_MODE
         # FIXME: fix the problem with empty lit e.g. <lit v=""/>
         # print 'DEBUG push', event.attrs['v'].encode('utf-8')
         code = []
@@ -76,7 +76,7 @@ class CodeGenerator(object):
         return code    
 
     def get_var_basic_code(self, event, tagged = False):
-        global DEBUG_MODE        
+        global DEBUG_MODE
         code = []
         if DEBUG_MODE:
             code.append(u'### DEBUG: ' + self.get_xml_tag(event))
