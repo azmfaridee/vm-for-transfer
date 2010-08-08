@@ -8,6 +8,11 @@ Wiki Pendig Works:
 Compiler Pending Works:
 -----------------------
 - Handle 3 'case' in 'chunk' tag (caseFirstWord, caseOtherWord, variableCase), current version ignores this
+- All the 'addtrie' commands must be together
+    - current implementation has pattern1, action1, pattern2, action2 seqeunce
+    - we want patter1, patter2, action1, action2
+- tags that have not been implemented:
+    - modify-case
 
 VM Pending Works
 -----------------------
