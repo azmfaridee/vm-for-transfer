@@ -1,6 +1,14 @@
 Author: Abu Zaher
 
-Current state:
-- Working on the compiler
-  - which XML parser to use?
+Wiki Pendig Works:
+-----------------------
+- New instructions to add in the wiki: 
+    - mlu, incini, incin, and, or, not, storev, concat, chunk, lu
+
+Compiler Pending Works:
+-----------------------
+- Handle 3 'case' in 'chunk' tag (caseFirstWord, caseOtherWord, variableCase), current version ignores this
+
+VM Pending Works
+-----------------------
 - Change the search algo in the Trie
