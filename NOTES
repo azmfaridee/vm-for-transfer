@@ -7,5 +7,9 @@ Notes about tags:
 
 - <case-of>
     - works exactly like <clip>, has the three attrs like <clip>, but extracts the case
-
     
+- <let>
+    - 2 childs
+    - left childs: clip, var
+    - rihght childs: clip, lit, lit-tag, var, concat
+        - unimplemened: case-of
