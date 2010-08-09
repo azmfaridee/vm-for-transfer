@@ -57,7 +57,7 @@ class Compiler(object):
 
         self.processedCode = []
         
-        self.lazyBuffer = {}
+        self.lazyBuffer = []
 
     def compile(self):
         self.parser.parse()

@@ -393,7 +393,8 @@ class EventHandler(object):
                 # normal rvalue cliptl or clipsl for 'clip'
                 code.extend(self.codeGenerator.get_clip_tag_rvalue_code(child2))
             elif child2.name == 'concat':
-                lazyCode = self.compiler.lazyBuffer.pop('concat')
+                idx = zip(*self.compiler.lazyBuffer)[0].index('concat')
+                lazyCode = self.compiler.lazyBuffer.pop(idx)[1]
                 code.extend(lazyCode)    
 
             # storetl or storesl
@@ -413,7 +414,8 @@ class EventHandler(object):
             elif child2.name == 'var':
                 code.extend(self.codeGenerator.get_var_basic_code(child2))
             elif child2.name == 'concat':
-                lazyCode = self.compiler.lazyBuffer.pop('concat')
+                idx = zip(*self.compiler.lazyBuffer)[0].index('concat')
+                lazyCode = self.compiler.lazyBuffer.pop(idx)[1]
                 code.extend(lazyCode)
 
             # now the extra instuction for the assignment

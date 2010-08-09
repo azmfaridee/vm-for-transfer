@@ -85,7 +85,7 @@ class ExpatParser(object):
                 self.compiler.codestack.append([callStackLength, name, codebuffer])
             else:
                 self.compiler.codestack.append([callStackLength, name, []])
-                self.compiler.lazyBuffer[name] = result
+                self.compiler.lazyBuffer.append([name, result])
             
         
         #print 'END',  self.callStack
