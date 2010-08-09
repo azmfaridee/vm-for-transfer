@@ -123,10 +123,6 @@ class EventHandler(object):
         
     def handle_action_start(self, event):
         self.compiler.actionid += 1
-        label = u'action_' + str(self.compiler.actionid) + u'_start'
-        self.labels.append(label)
-        code = [label + ':\tnop']
-        self.codestack.append([self.callStack.getLength(), 'action', code])
     
     def handle_with_param_start(self, event):
         self.compiler.macro_args_count += 1
@@ -304,6 +300,22 @@ class EventHandler(object):
         codebuffer.append(label + ':\tnop')
         
     def handle_section_rules_end(self, event, codebuffer):
+        # first get all the 'action'  tag 'lazy' codes from lazyBuffer
+        tmpbuffer = []
+        newLazyBuffer = []
+        for name, code in self.compiler.lazyBuffer:
+            if name == 'action':
+                tmpbuffer.extend(code)
+            else:
+                # add the not matching code in newLazyBuffer
+                newLazyBuffer.append([name, code])
+                
+        # finally add this tmpbuffer into codebuffer
+        codebuffer.extend(tmpbuffer)
+        # update compiler's lazyBuffer
+        self.compiler.lazyBuffer = newLazyBuffer
+        
+        # code for this tag
         label = u'section_rules_end'
         self.labels.append(label)
         codebuffer.append(label + ':\tnop')
@@ -337,9 +349,15 @@ class EventHandler(object):
             codebuffer.reverse()
             
     def handle_action_end(self, event, codebuffer):
-        label = u'action_' + str(self.compiler.actionid) + '_end'
-        code = [label + ':\tnop']
-        codebuffer.extend(code)
+        start_label = u'action_' + str(self.compiler.actionid) + u'_start'
+        self.labels.append(start_label)
+        codebuffer.insert(0, start_label + ':\tnop')
+        
+        end_label = u'action_' + str(self.compiler.actionid) + '_end'
+        codebuffer.append(end_label + ':\tnop')
+        
+        # returning invokes the lazy buffer write
+        return codebuffer
                 
     def handle_when_end(self, event, codebuffer):
         code = []
