@@ -9,7 +9,7 @@ Compiler Pending Works:
 -----------------------
 - All the 'addtrie' commands must be together
     - current implementation has pattern1, action1, pattern2, action2 seqeunce
-    - we want patter1, patter2, action1, action2
+    - we want pattern1, pattern2, action1, action2
     - after an action has been performed for a pattern, the vm needs to return so that it can resume processing through the remaining patterns
         - at the end of all 'addtrie' instructions
             - put a jmp to jump to the end of file

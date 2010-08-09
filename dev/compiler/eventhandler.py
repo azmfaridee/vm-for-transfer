@@ -110,9 +110,6 @@ class EventHandler(object):
         self.codestack.append([self.callStack.getLength(), 'def-macro', code])
 
     def handle_choose_start(self, event):
-        ## print event
-        ## a = self.compiler.symbolTable.getChilds(event)
-        ## print a
         pass
         
     def handle_when_start(self, event):
