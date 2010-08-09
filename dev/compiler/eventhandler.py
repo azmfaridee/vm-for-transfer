@@ -502,7 +502,8 @@ class EventHandler(object):
         
         no_of_brace_params = 0
         for child in childs:
-            if child.name == 'lu' or child.name == 'mlu' or child.name == 'b':
+            if child.name in ['lu', 'mlu', 'b']:
+            #if child.name == 'lu' or child.name == 'mlu' or child.name == 'b':
                 no_of_brace_params += 1
         
         code = []
@@ -513,12 +514,16 @@ class EventHandler(object):
         # varying version of chunk depending on 'case'
         # FIXE: are there more values for 'case' other than this 3?
         
-        if event.attrs['case'] == 'caseFirstWord':
+        try:
+            if event.attrs['case'] == 'caseFirstWord':
+                code.append(u'chunkfw\t' + str(self.compiler.chunkModeArgs + 1))
+            elif event.attrs['case'] == 'caseOtherWord':
+                code.append(u'chunkow\t' + str(self.compiler.chunkModeArgs + 1))
+            elif event.attrs['case'] == 'variableCase':
+                code.append(u'chunkvc\t' + str(self.compiler.chunkModeArgs + 1))
+        except KeyError:
+            # if no data about the case of given, chunkfw is the default one
             code.append(u'chunkfw\t' + str(self.compiler.chunkModeArgs + 1))
-        elif event.attrs['case'] == 'caseOtherWord':
-            code.append(u'chunkow\t' + str(self.compiler.chunkModeArgs + 1))
-        elif event.attrs['case'] == 'variableCase':
-            code.append(u'chunkvc\t' + str(self.compiler.chunkModeArgs + 1))
             
         codebuffer.extend(code)
         
