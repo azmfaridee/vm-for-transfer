@@ -7,7 +7,10 @@ Notes about tags:
 
 - <case-of>
     - works exactly like <clip>, has the three attrs like <clip>, but extracts the case
-    - cliptl, clipsl, storetl, storesl <=> casetl, casesl, storecasetl, storecasesl
+    - Proposed tags for this one: cliptl, clipsl, storetl, storesl <=> casetl, casesl, stcasetl, stcasesl
+    - case-of can both be an lvalue and rvalue, thought rvalue is seen most of the time
+    - can have any of the three values 'AA', 'Aa' and 'aa'
+    - used only in the chunker module
     
 - <chunk>
     - caseFirstWord, caseOtherWord, variableCase <=> chunkfw, chunkow, chunkvc
