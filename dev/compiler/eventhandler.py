@@ -260,7 +260,53 @@ class EventHandler(object):
             code.append(u'pushsb\t' + event.attrs['pos'])
         else:
             code.append(u'pushbl')
-        self.codestack.append([self.callStack.getLength(), 'b', code]) 
+        self.codestack.append([self.callStack.getLength(), 'b', code])
+        
+    # these are palceholder codes for now
+    
+    # code for modify-case
+    def handle_modify_case_start(self, event):
+        global DEBUG_MODE        
+        code = []
+        if DEBUG_MODE:
+            code.append(u'### DEBUG: ' + self.codeGenerator.get_xml_tag(event))
+        self.codestack.append([self.callStack.getLength(), event.name, code])
+        
+    def handle_case_of_start(self, event):
+        global DEBUG_MODE        
+        code = []
+        if DEBUG_MODE:
+            code.append(u'### DEBUG: ' + self.codeGenerator.get_xml_tag(event))
+        self.codestack.append([self.callStack.getLength(), event.name, code])
+
+    def handle_begins_with_start(self, event):
+        global DEBUG_MODE        
+        code = []
+        if DEBUG_MODE:
+            code.append(u'### DEBUG: ' + self.codeGenerator.get_xml_tag(event))
+        self.codestack.append([self.callStack.getLength(), event.name, code])
+        
+    def handle_ends_with_start(self, event):
+        global DEBUG_MODE        
+        code = []
+        if DEBUG_MODE:
+            code.append(u'### DEBUG: ' + self.codeGenerator.get_xml_tag(event))
+        self.codestack.append([self.callStack.getLength(), event.name, code])
+        
+    def handle_contains_substring_start(self, event):
+        global DEBUG_MODE        
+        code = []
+        if DEBUG_MODE:
+            code.append(u'### DEBUG: ' + self.codeGenerator.get_xml_tag(event))
+        self.codestack.append([self.callStack.getLength(), event.name, code])
+        
+    def handle_get_case_from_start(self, event):
+        global DEBUG_MODE        
+        code = []
+        if DEBUG_MODE:
+            code.append(u'### DEBUG: ' + self.codeGenerator.get_xml_tag(event))
+        self.codestack.append([self.callStack.getLength(), event.name, code])
+
     
     # list of 'ending' event handlers
     def handle_and_end(self, event, codebuffer):
@@ -440,12 +486,6 @@ class EventHandler(object):
             code.append(u'storev')
             
         codebuffer.extend(code)
-
-    def handle_modify_case_end(self, event, codebuffer):
-        ## child1, child2 = self.compiler.parentRecord.getChilds(event)
-        code = []
-        ## print child1
-        ## print child2
 
     def handle_append_end(self, event, codebuffer):
         
