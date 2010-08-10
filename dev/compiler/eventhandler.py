@@ -106,7 +106,7 @@ class EventHandler(object):
 
         # print macro_name
         self.labels.append(label)
-        code = [label + ':	nop']
+        code = [label + ':\tnop']
         self.codestack.append([self.callStack.getLength(), 'def-macro', code])
 
     def handle_choose_start(self, event):
@@ -131,7 +131,7 @@ class EventHandler(object):
         self.compiler.otherwiseStack.append(self.compiler.otherwiseid)
         label = u'otherwise_' + str(self.compiler.otherwiseStack[-1]) + u'_start'
         self.labels.append(label)
-        code = [label + ':	nop']
+        code = [label + ':\tnop']
         self.codestack.append([self.callStack.getLength(), 'otherwise', code])
 
     

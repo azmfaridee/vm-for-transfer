@@ -48,6 +48,7 @@ if __name__ == "__main__":
     t = Trie()
 
     vmreader = VMReader('input-vm/demo.vm')
+    #vmreader = VMReader('apertium-en-ca.ca-en.v1m')
     cs = vmreader.getCodeSegment()
     
     s = VMStack()
