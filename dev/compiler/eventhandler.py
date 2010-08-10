@@ -87,7 +87,15 @@ class EventHandler(object):
     def handle_section_def_macros_start(self, event):
         label = u'section_def_macros_start'
         self.labels.append(label)
-        code = [label + ':\tnop']
+        
+        code = []
+        
+        # at the start of program, jmp to rules section (all the addtrie are there by default)
+        # basically this is where we tell the program where the MAIN section of the assembly code starts
+        
+        code.append(u'jmp\tsection_rules_start')
+        code.append(label + ':\tnop')
+        
         self.codestack.append([self.callStack.getLength(), 'section-def-macros', code])
         
     def handle_section_rules_start(self, event):
