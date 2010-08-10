@@ -611,3 +611,7 @@ class EventHandler(object):
 
     def handle_modify_case_end(self, event, codebuffer):
         first, second = self.compiler.symbolTable.getChilds(event)
+        
+    def handle_transfer_end(self, event, codebuffer):
+        # finally, the hlt instruction
+        codebuffer.append(u'hlt')
