@@ -37,17 +37,31 @@ class CodeSegment(object):
 
     def add(self, codestring, label=None):
         self.unlinked.append([codestring, label])
-
-    def link(self):
+    
+    def preprocess(self):
         for address, code in enumerate(self.unlinked):
             if code[1] is not None and code[1] not in self.labels:
                     self.labels[code[1]] = address
 
+    def link(self):                    
         for code in self.unlinked:
             linkedcode = code[0]           
             for label, laddress in self.labels.iteritems():
                 linkedcode = linkedcode.replace(label, str(laddress))
             self.linked.append(linkedcode)
+    
+    def optimize(self):
+        self.optimized = self.linked
+        
+    # function for debugging purposes
+    def printLinked(self):
+        for x in self.linked: print x
+    
+    def printUnlinked(self):
+        for x in self.unlinked: print x
+        
+    def printOptimized(self):
+        for x in self.optimized: print x
 
 class VMException(Exception):
     """
@@ -68,64 +82,73 @@ class VM(object):
         self.pc = 0
         self.vars = {}
         self.a, self.b, self.c, self.d = [0 for x in range(0, 4)]
+        
+        self.one_opernad_instructions = [u'pushbl', u'pushz', u'pushnz', u'cliptl', u'clipsl', u'storetl', u'storesl', u'cmpi', u'cmp', u'match', u'matchi', u'hlt', u'ret', u'nop']
+        self.two_operand_instructions = [u'push', u'pushv', u'pusht', u'pushsb', u'addtrie', u'lu', u'brace', u'chunk', u'out', u'jmp', u'jz', u'jnz', u'call']
 
     def run(self):
         try:
             while True:    
-                print "RUNNING:", self.codesegment.linked[self.pc]
-                opcode = self.codesegment.linked[self.pc].split(None, 2)
+                print "RUNNING:", self.codesegment.linked[self.pc],
+                # maxsplit is 1, because we have at most 2 operand instructions
+                opcode = self.codesegment.linked[self.pc].split(None, 1)
+                print 'LENGTH:', len(opcode)
 
                 if len(opcode) == 1:
                     if opcode[0] == 'hlt': break
-                    if opcode[0] == 'return':
+                    
+                    if opcode[0] == 'ret':
                         # FIXME: some fix may be pending, have to think it through
-                        self.pc = self.vmstack.pop()
-                        self.a, self.b, self.c, self.d = self.vmstack.pop()
+                        #self.pc = self.vmstack.pop()
+                        #self.a, self.b, self.c, self.d = self.vmstack.pop()
+                        self.pc += 1
+                    
                     # STACK: [label] -> []
                     if opcode[0] == 'jmp':
-                        self.pc = int(self.vmstack.pop())
+                        #self.pc = int(self.vmstack.pop())
+                        self.pc += 1
 
                 elif len(opcode) == 2:
-                    # call statement, for macro call
-                    if opcode[0] == 'call':
-                        self.vmstack.push([self.a, self.b, self.c, self.d])
-                        self.vmstack.push(self.pc + 1)
-                        # FIXME: need fix in macro parameter number identification here
-                        # push macro paramerters here
-                        self.pc = int(opcode[1])
-                    # general purpose push statement
-                    elif opcode[0] == 'push':
-                        self.vmstack.push(opcode[1])
+                    if True:
                         self.pc += 1
-                    # declare a variable
-                    elif opcode[0] == 'var':
-                        self.vars[opcode[1]] = None
-                        self.pc += 1
-                    # assign value to a variable, stack has to be [(bottom) varname, value (top)]
-                    elif opcode[0] == 'eq':
-                        value, varname = self.vmstack.pop2()
-                        if varname not in self.vars:
-                            raise VMException('Undeclared variable referenced')
-                        self.vars[varname] = value
-                        self.pc += 1
-                    # push a variable 'name' into the stack
-                    # used it prior to 'eq' opcode
-                    elif opcode[0] == 'pushv':
-                        if opcode[1] not in self.vars:
-                            raise VMException('Undeclared variable referenced')
+                    ## call statement, for macro call
+                    #if opcode[0] == 'call':
+                    #    self.vmstack.push([self.a, self.b, self.c, self.d])
+                    #    self.vmstack.push(self.pc + 1)
+                    #    # FIXME: need fix in macro parameter number identification here
+                    #    # push macro paramerters here
+                    #    self.pc = int(opcode[1])
+                        
+
+                    ## general purpose push statement
+                    #elif opcode[0] == 'push':
+                    #    self.vmstack.push(opcode[1])
+                    #    self.pc += 1
+                    #
+                    
+                    ## declare a variable
+                    #elif opcode[0] == 'var':
+                    #    self.vars[opcode[1]] = None
+                    #    self.pc += 1
+                    ## assign value to a variable, stack has to be [(bottom) varname, value (top)]
+                    #
+                    
+                    #elif opcode[0] == 'eq':
+                    #    value, varname = self.vmstack.pop2()
+                    #    if varname not in self.vars:
+                    #        raise VMException('Undeclared variable referenced')
+                    #    self.vars[varname] = value
+                    #    self.pc += 1
+                    
+                    ## push a variable 'name' into the stack
+                    ## used it prior to 'eq' opcode
+                    #elif opcode[0] == 'pushv':
+                    #    if opcode[1] not in self.vars:
+                    #        raise VMException('Undeclared variable referenced')
 
                     # matches the last word in stack against trie
                     # STACK: word -> matched_symbol
                     #elif opcode[0] == 'match':
                     #    self.pc += 1
-                    else:
-                        self.pc += 1
-                elif len(opcode) == 3:
-                    if opcode[0] == 'addtrie':
-                        self.trie.add(opcode[1], opcode[2])
-                        self.pc += 1
-                # FIXME: do we really need three operand opcode?
-                else:
-                    pass
         except Exception, err:
             print str(err)

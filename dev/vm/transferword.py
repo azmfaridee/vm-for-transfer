@@ -42,8 +42,8 @@ class TransferWord(object):
 
 class TransferWordFactory(object):
 
-    def __init__(self, string):
-        self.string = string
+    def __init__(self, inr):
+        self.string = inr.text
         self.transferwords = []
 
     def generate(self):

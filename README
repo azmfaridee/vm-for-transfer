@@ -32,6 +32,10 @@ VM Pending Works
 - Change the search algo in the Trie
 - hlt stops the vm now in one iteration, but it should not be doing exactly this
     - we want the vm to loop over the our codesegment until input text is exhausted
+- We need a preprocessror in the CodeSegment class
+    - a scan through unlinked code will produce the necessary labels prior to calling the linker
+- Provide proper unicode processing capability
+    - LOW PRIORITY
 
 Debugging:
 -----------------------
