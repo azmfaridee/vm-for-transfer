@@ -54,6 +54,9 @@ class CodeSegment(object):
         self.optimized = self.linked
         
     # function for debugging purposes
+    def printLabels(self):
+        for x in self.labels: print x
+    
     def printLinked(self):
         for x in self.linked: print x
     
@@ -97,19 +100,20 @@ class VM(object):
                 if len(opcode) == 1:
                     if opcode[0] == 'hlt': break
                     
-                    if opcode[0] == 'ret':
+                    elif opcode[0] == 'ret':
                         # FIXME: some fix may be pending, have to think it through
                         #self.pc = self.vmstack.pop()
                         #self.a, self.b, self.c, self.d = self.vmstack.pop()
                         self.pc += 1
-                    
-                    # STACK: [label] -> []
-                    if opcode[0] == 'jmp':
-                        #self.pc = int(self.vmstack.pop())
+                        
+                    else:
                         self.pc += 1
 
                 elif len(opcode) == 2:
-                    if True:
+                    if opcode[0] == 'jmp':
+                        self.pc = int(opcode[1])
+                        
+                    else:
                         self.pc += 1
                     ## call statement, for macro call
                     #if opcode[0] == 'call':

@@ -5,12 +5,15 @@ from vm import *
 from transferword import *
 import sys
 
+label_start_words = [u'action', u'macro', u'otherwise', u'section', u'when']
+
 class VMReader(object):
     """
     Class to read text vm instructions and convert that into
     code segment
     """
     def __init__(self, filename):
+        global label_start_words
         self.cs = CodeSegment()
         with open(filename) as f:
             for line in f:
@@ -20,14 +23,22 @@ class VMReader(object):
                     # skip the comments
                     if ltext[0] == '#': continue
                     else:
-                        ltext = ltext.split(':')
-                        if len(ltext) == 2:
-                            # the line is label: instruction
-                            # we add in (instruction, label) format
+                        # need to check for starting of label before splitting
+                        # blindly spliting by ':' could get us into trouble as ':' can
+                        # be part of sting literal too
+                        if any(map(lambda x: ltext.startswith(x.encode('utf-8')), label_start_words)):
+                            ltext = ltext.split(':')
                             self.cs.add(ltext[1].strip(), ltext[0].strip())
                         else:
-                            # the line is instruction
-                            self.cs.add(ltext[0].strip())
+                            self.cs.add(ltext.strip())
+                        #ltext = ltext.split(':')
+                        #if len(ltext) == 2:
+                        #    # the line is label: instruction
+                        #    # we add in (instruction, label) format
+                        #    self.cs.add(ltext[1].strip(), ltext[0].strip())
+                        #else:
+                        #    # the line is instruction
+                        #    self.cs.add(ltext[0].strip())
                             
         # do preprocessing of the code
         self.cs.preprocess()        
@@ -59,18 +70,19 @@ if __name__ == "__main__":
     t = Trie()
 
     #vmreader = VMReader('input-vm/demo.vm')
-    #vmreader = VMReader('apertium-en-ca.ca-en.v1m')
-    vmreader = VMReader('input-vm/addtrie.v1m')
+    vmreader = VMReader('apertium-en-ca.ca-en.v1m')
+    #vmreader = VMReader('input-vm/addtrie.v1m')
     cs = vmreader.getCodeSegment()
     
+    cs.printLabels()
     #cs.printOptimized()
     
     
-    s = VMStack()
+    #s = VMStack()
     
-    vm = VM(s, t, cs)
-    vm.run()
-    print s 
+    #vm = VM(s, t, cs)
+    #vm.run()
+    #print s 
     
     ## example match againt source lang
     #for tword in twords:

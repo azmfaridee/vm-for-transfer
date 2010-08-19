@@ -21,3 +21,20 @@ Notes about tags:
     - left childs: clip, var
     - rihght childs: clip, lit, lit-tag, var, concat
         - unimplemened: case-of
+        
+Notes about labels:
+- list of lablel types:
+    - action_#ID#_start
+    - action_#ID#_end
+    - macro_#ID#_start
+    - macro_#ID#_end
+    - otherwise_#ID#_start
+    - otherwise_#ID#_end
+    - section_def_macros_end
+    - section_def_macros_start
+    - section_rules_end
+    - section_rules_start
+    - when_#ID#_start
+    - when_#ID#_end
+- misinterpreted labels:
+    - push	"
