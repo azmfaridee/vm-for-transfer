@@ -118,7 +118,13 @@ class EventHandler(object):
         self.codestack.append([self.callStack.getLength(), 'def-macro', code])
 
     def handle_choose_start(self, event):
-        pass
+        self.compiler.chooseid += 1
+        self.compiler.chooseStack.append(self.compiler.chooseid)
+        
+        label = u'choose_' + str(self.compiler.chooseStack[-1]) + u'_start'
+        self.labels.append(label)
+        code = [label + ':\tnop']
+        self.codestack.append([self.callStack.getLength(), 'choose', code])
         
     def handle_when_start(self, event):
         self.compiler.whenid += 1
@@ -381,26 +387,33 @@ class EventHandler(object):
         self.macroMode = False
 
     def handle_choose_end(self, event, codebuffer):
-        childs = self.compiler.symbolTable.getChilds(event)
-        ## pprint(childs)
-        ## pprint(codebuffer)
-        ## print
-
-        has_otherwise = False
-        for child in reversed(childs):
-            if child.name == 'otherwise':
-                has_otherwise = True
-                break
+        chooseid = self.compiler.chooseStack[-1]
+        choose_label = u'choose_' + str(chooseid) + '_end'
         
-        # reversing does not take much CPU time, so this is the preferred 
-        # method over iterating in reverse
-        if has_otherwise:
-            codebuffer.reverse()
-            for index, line in enumerate(codebuffer):
-                if line.startswith('#!#jmp\t'):
-                    codebuffer[index] = line.replace('#!#jmp\t', 'jmp\t')
-                    break
-            codebuffer.reverse()
+        #childs = self.compiler.symbolTable.getChilds(event)
+        ### pprint(childs)
+        ### pprint(codebuffer)
+        ### print
+        #
+        #has_otherwise = False
+        #for child in reversed(childs):
+        #    if child.name == 'otherwise':
+        #        has_otherwise = True
+        #        break
+        #
+        ## reversing does not take much CPU time, so this is the preferred 
+        ## method over iterating in reverse
+        #if has_otherwise:
+        #    codebuffer.reverse()
+        #    for index, line in enumerate(codebuffer):
+        #        if line.startswith('#!#jmp\t'):
+        #            codebuffer[index] = line.replace('#!#jmp\t', 'jmp\t')
+        #            break
+        #    codebuffer.reverse()
+        #
+        code = [choose_label + u':\tnop']
+        codebuffer.extend(code)
+        self.compiler.chooseStack.pop()
             
     def handle_action_end(self, event, codebuffer):
         start_label = u'action_' + str(self.compiler.actionid) + u'_start'
@@ -416,13 +429,18 @@ class EventHandler(object):
     def handle_when_end(self, event, codebuffer):
         code = []
         
+        chooseid = self.compiler.chooseStack[-1]
+        choose_end_label = u'choose_' + str(chooseid) + u'_end'
+        
         local_whenid = self.compiler.whenStack[-1]
         otherwise_end_label = u'otherwise_' + str(local_whenid)  + u'_end'
         when_end_label = u'when_' + str(local_whenid) + u'_end'
         
         self.labels.append(when_end_label)
 
-        code.append('#!#jmp\t' + otherwise_end_label)
+        code.append(u'jmp\t' + choose_end_label)
+        
+        #code.append('#!#jmp\t' + otherwise_end_label)
         code.append(when_end_label + ':\tnop')
         codebuffer.extend(code)
         

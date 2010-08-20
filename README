@@ -18,6 +18,9 @@ Compiler Pending Works:
             - put a jmp to run immediately below the addtrie
             
 - when/otherwise breaks sometimes :(
+     - [HIGH PRIORITY]
+        - most of the time "otherwise_\d+_end" label
+    
 
 - tags that have not been implemented:
     - modify-case

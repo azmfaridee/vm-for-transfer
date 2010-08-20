@@ -23,6 +23,7 @@ class Compiler(object):
         self.whenid = 0
         # otherwiseid, calculated from whenid but initially set to 0
         self.otherwiseid = 0
+        self.chooseid = 0
         self.actionid = 0
         self.pattern_item_count = 0
         self.macro_args_count = 0
@@ -44,6 +45,7 @@ class Compiler(object):
         # whenstack is used for nested when call
         self.whenStack = []
         self.otherwiseStack = []
+        self.chooseStack = []
         
         # callStack holds the call history
         self.callStack = CallStack()
