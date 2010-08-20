@@ -324,10 +324,20 @@ class EventHandler(object):
     
     # list of 'ending' event handlers
     def handle_and_end(self, event, codebuffer):
-        codebuffer.append(u'and')
+        childs = self.compiler.symbolTable.getChilds(event)
+        num_childs = len(childs)
+        codebuffer.append(u'###DEBUG and params ' + str(num_childs))
+        # we want one less 'and' that num_childs
+        for i in range(1, num_childs):
+            codebuffer.append(u'and')
 
     def handle_or_end(self, event, codebuffer):
-        codebuffer.append(u'or')
+        childs = self.compiler.symbolTable.getChilds(event)
+        num_childs = len(childs)
+        codebuffer.append(u'###DEBUG or params ' + str(num_childs))
+        # we want one less 'or' that num_childs
+        for i in range(1, num_childs):
+            codebuffer.append(u'or')
 
     def handle_not_end(self, event, codebuffer):
         codebuffer.append(u'not')
