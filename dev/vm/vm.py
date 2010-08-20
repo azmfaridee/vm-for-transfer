@@ -101,23 +101,27 @@ class VM(object):
                     if opcode[0] == 'hlt': break
                     
                     elif opcode[0] == 'ret':
-                        # FIXME: some fix may be pending, have to think it through
-                        #self.pc = self.vmstack.pop()
-                        #self.a, self.b, self.c, self.d = self.vmstack.pop()
-                        self.pc += 1
+                        # restore vm state from state stack
+                        
+                        # get the return address
+                        self.pc = int(self.vmstack.pop())
                         
                     else:
                         self.pc += 1
 
                 elif len(opcode) == 2:
                     if opcode[0] == 'jmp':
-                        # FIXME: some labels are not properly generated
-                        # specially otherwise labels
-                        try:
-                            self.pc = int(opcode[1])
-                        except ValueError:
-                        # FIXME: this is just to make the vm run, NOT work
-                            self.pc += 1
+                        self.pc = int(opcode[1])
+                            
+                    elif opcode[0] == 'call':
+                        npar = int(vmstack.pop())
+                        operands = []
+                        for x in range(0, npar):
+                            operands.append(int(vmstack.pop()))
+                        self.vmstack.push(self.pc)
+                        
+                        # save currnet env and init new env with operands
+                        self.pc = int(opcode[1].replace('"', ''))
                         
                     else:
                         self.pc += 1

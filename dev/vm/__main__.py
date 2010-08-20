@@ -78,12 +78,12 @@ if __name__ == "__main__":
     cs.printOptimized()
     
     
-    #s = VMStack()
+    s = VMStack()
     
     #vm = VM(s, t, cs)
     #vm.run()
     #print s 
-    
+    #
     ## example match againt source lang
     #for tword in twords:
     #    print tword.slword, '->', t.find_relaxed(tword.slword.tags)
