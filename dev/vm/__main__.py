@@ -5,7 +5,7 @@ from vm import *
 from transferword import *
 import sys
 
-label_start_words = [u'action', u'macro', u'otherwise', u'section', u'when']
+label_start_words = [u'action', u'macro', u'otherwise', u'section', u'when', u'choose']
 
 class VMReader(object):
     """
