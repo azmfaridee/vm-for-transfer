@@ -74,8 +74,8 @@ if __name__ == "__main__":
     #vmreader = VMReader('input-vm/addtrie.v1m')
     cs = vmreader.getCodeSegment()
     
-    cs.printLabels()
-    #cs.printOptimized()
+    #cs.printLabels()
+    cs.printOptimized()
     
     
     #s = VMStack()

@@ -111,7 +111,13 @@ class VM(object):
 
                 elif len(opcode) == 2:
                     if opcode[0] == 'jmp':
-                        self.pc = int(opcode[1])
+                        # FIXME: some labels are not properly generated
+                        # specially otherwise labels
+                        try:
+                            self.pc = int(opcode[1])
+                        except ValueError:
+                        # FIXME: this is just to make the vm run, NOT work
+                            self.pc += 1
                         
                     else:
                         self.pc += 1
