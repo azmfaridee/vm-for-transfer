@@ -37,12 +37,12 @@
   Apertium is a rule based, shallow transfer machine translation
   platform. While already a very robust architecture,  the XML based
   shallow transfer mechanism suffers from slowdown in case of complex
-  transfer based language pairs. A new architechture is proposed to
+  transfer based language pairs. A new architecture is proposed to
   circumvent the issue. A compiler is proposed that will create
   pseudo-assembly files from the XML transfer files. A virtual machine
   will run instructions from this transfer file, speeding up the
   transfer system by taking advantage of jump instructions in the
-  precalculated address space. Simple performace evaluation is also
+  pre-calculated address space. Simple performance evaluation is also
   presented  along with future work directions.
 \end{abstract}
 
@@ -60,12 +60,32 @@
 % on A4 paper.
 
 {\itshape{A brief intro about Apertium and its pipeline, some figure
-    showing the whole system would be good enough}}
+    showing the whole system would be enough}}
 
 \section{The Transfer System}
 \label{sec:transfer-system}
 
-{\itshape{Mode detailed info about the transfer system}}
+{\itshape{Mode detailed info about the transfer system, highlight some
+    performance analysis where the transfer system becomes the main
+    bottleneck}}
+
+\section{A New Approach}
+\label{sec:new-approach}
+
+{\itshape{Start with simple description of the compiler and virtual
+    machine architecture, describe how we are going to implement the
+    whole system. A diagram of the whole vm would be
+    necessary. Explain all the design decisions that we made, e.g. why
+    we chose the stack machine over register machine, some random facts
+    like our xml language does not have any direct looping i.e. for,
+    while and how it affects our decisions}}
+
+\section{The Compiler}
+\label{sec:compiler}
+
+{\itshape{Here we are going to talk details about the compiler. A
+    compact list of the instruction sets would be good. If possible
+    categorize the instruction sets and describe only one from each category}}
 
 % \section{Using the provided style files}
 
