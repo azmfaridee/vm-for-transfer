@@ -9,6 +9,7 @@
 \usepackage{natbib}
 \usepackage{url}
 \usepackage{latexsym}
+\usepackage{graphicx}
 
 % \bibpunct{(}{)}{;}{A}{,}{,}
 % \bibdata{mybib.bib}
@@ -16,18 +17,27 @@
 \title{Speeding up Apertium: A Compiler and a Virtual Machine for the
   Transfer Module}
 
-\author{Abu Zaher Md. Faridee\\
-  Dept. of Comp. Science and Eng. \\
-  Bangladesh Univ. of Eng. and Tech. \\
-  Dhaka 1000, Bangladesh \\
-  {\tt zaher14@gmail.com} \And
-  Sergio Ortiz Rojas \\
-  Dept. Llenguatges i Sist. Informàtics \\
-  Universitat d'Alacant \\
-  Alacant. E-03070 \\  
-  {\tt sergio@prompsit.com}}
+\author{Author X\\
+  % Abu Zaher Md. Faridee\\
+  % Dept. of Comp. Science and Eng. \\
+  % Bangladesh Univ. of Eng. and Tech. \\
+  % Dhaka 1000, Bangladesh \\
+  Dept. of A\\
+  B University\\
+  {\tt authorx@a.b.edu} \And
+  % {\tt zaher14@gmail.com} \And
+  Author Y\\
+  Dept. of C\\
+  D University\\
+  {\tt authory@c.d.edu}
+  % Sergio Ortiz Rojas \\
+  % Dept. Llenguatges i Sist. Informàtics \\
+  % Universitat d'Alacant \\
+  % Alacant. E-03070 \\  
+  % {\tt sergio@prompsit.com}
+}
 
-\date{}
+% \date{}
 
 \begin{document}
 
@@ -74,11 +84,17 @@
 
 {\itshape{Start with simple description of the compiler and virtual
     machine architecture, describe how we are going to implement the
-    whole system. A diagram of the whole vm would be
+    whole system. (how the morphological analyser was added the extra
+    switch) A diagram of the whole vm would be
     necessary. Explain all the design decisions that we made, e.g. why
     we chose the stack machine over register machine, some random facts
     like our xml language does not have any direct looping i.e. for,
     while and how it affects our decisions}}
+
+\begin{center}
+  \includegraphics[width=0.5\textwidth]{vm-block-diagram}
+\end{center}
+
 
 \section{The Compiler}
 \label{sec:compiler}
